@@ -19,7 +19,6 @@
     "dotenv": "^16.6.1",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "putduckdata": "file:..",
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.1",
     "pg": "^8.11.3",

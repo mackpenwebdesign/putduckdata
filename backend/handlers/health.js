@@ -33,14 +33,13 @@ export const handler = async (event) => {
 
     // Check environment variables
     const envStatus = {
-      database: !!process.env.DATABASE_URL,
-      jwt_secret: !!process.env.JWT_SECRET && process.env.JWT_SECRET.length >= 32,
-      paystack_secret: !!process.env.PAYSTACK_SECRET_KEY,
-      paystack_public: !!process.env.PAYSTACK_PUBLIC_KEY,
-      node_env: process.env.NODE_ENV || 'development'
+      database: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
+      jwt_secret: !!(process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length >= 16),
+      onepapi_key: !!(process.env.ONEPAPI_API_KEY && process.env.ONEPAPI_API_KEY.trim()),
+      node_env: process.env.NODE_ENV || 'not set'
     };
 
-    const allEnvConfigured = Object.values(envStatus).every(v => v === true || typeof v === 'string');
+    const allEnvConfigured = envStatus.database && envStatus.jwt_secret;
 
     // Overall health status
     const isHealthy = dbStatus === 'healthy' && allEnvConfigured;
@@ -58,6 +57,9 @@ export const handler = async (event) => {
       },
       environment: {
         node_env: envStatus.node_env,
+        database_set: envStatus.database,
+        jwt_set: envStatus.jwt_secret,
+        onepapi_set: envStatus.onepapi_key,
         configured: allEnvConfigured
       },
       version: '1.0.0'
