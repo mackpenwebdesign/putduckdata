@@ -1,0 +1,33 @@
+﻿{
+  "name": "putduckdata-backend",
+  "version": "2.0.0",
+  "description": "PutDuckData Ghana backend — single Vercel serverless function",
+  "type": "module",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node --env-file=../.env server.js",
+    "deploy": "vercel --prod",
+    "create-demo-users": "node scripts/create-demo-users.js",
+    "init-db": "node scripts/init-database.js",
+    "migrate": "node scripts/run-migrations.js",
+    "create-admin": "node scripts/create-admin.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.5",
+    "axios": "^1.6.7",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "putduckdata": "file:..",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.1",
+    "pg": "^8.11.3",
+    "ws": "^8.19.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@vercel/node": "^2.3.0",
+    "vercel": "^50.38.2"
+  }
+}

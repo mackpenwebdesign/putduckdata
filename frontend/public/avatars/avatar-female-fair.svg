@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <clipPath id="circle-ff"><circle cx="100" cy="100" r="100"/></clipPath>
+    <radialGradient id="bg-ff" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#e11d48"/>
+      <stop offset="100%" stop-color="#9f1239"/>
+    </radialGradient>
+    <radialGradient id="face-ff" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#FDDCB5"/>
+      <stop offset="100%" stop-color="#F5C5A3"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="100" cy="100" r="100" fill="url(#bg-ff)"/>
+
+  <!-- Body / blouse -->
+  <ellipse cx="100" cy="200" rx="70" ry="52" fill="#881337" clip-path="url(#circle-ff)"/>
+  <path d="M78 156 Q100 170 122 156 L126 200 Q100 206 74 200Z" fill="#4c0519" clip-path="url(#circle-ff)"/>
+
+  <!-- Neck -->
+  <rect x="89" y="138" width="22" height="24" rx="7" fill="url(#face-ff)"/>
+
+  <!-- Long hair back layer -->
+  <path d="M65 102 Q50 138 53 182 Q68 193 71 177 Q63 148 68 122 Q64 112 65 102Z" fill="#92400e" clip-path="url(#circle-ff)"/>
+  <path d="M135 102 Q150 138 147 182 Q132 193 129 177 Q137 148 132 122 Q136 112 135 102Z" fill="#92400e" clip-path="url(#circle-ff)"/>
+
+  <!-- Head -->
+  <ellipse cx="100" cy="113" rx="36" ry="40" fill="url(#face-ff)"/>
+
+  <!-- Hair top -->
+  <ellipse cx="100" cy="78" rx="37" ry="21" fill="#b45309"/>
+  <path d="M64 92 Q100 58 136 92 Q131 66 100 61 Q69 66 64 92Z" fill="#b45309"/>
+  <!-- Hair side pieces -->
+  <ellipse cx="66" cy="106" rx="9" ry="17" fill="#92400e"/>
+  <ellipse cx="134" cy="106" rx="9" ry="17" fill="#92400e"/>
+  <!-- Hair highlight -->
+  <path d="M82 69 Q100 63 118 69" stroke="#d97706" stroke-width="3" opacity="0.55" fill="none" stroke-linecap="round"/>
+
+  <!-- Ears -->
+  <ellipse cx="64" cy="114" rx="6" ry="8" fill="url(#face-ff)"/>
+  <ellipse cx="136" cy="114" rx="6" ry="8" fill="url(#face-ff)"/>
+  <ellipse cx="64" cy="114" rx="3.5" ry="5" fill="#e8a882" opacity="0.5"/>
+  <ellipse cx="136" cy="114" rx="3.5" ry="5" fill="#e8a882" opacity="0.5"/>
+  <!-- Earrings -->
+  <circle cx="64" cy="120" r="3" fill="#fbbf24"/>
+  <circle cx="136" cy="120" r="3" fill="#fbbf24"/>
+
+  <!-- Eyebrows — thin, arched -->
+  <path d="M81 102 Q89 97.5 96 101" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M104 101 Q111 97.5 119 102" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Eyes -->
+  <ellipse cx="88" cy="110" rx="6.5" ry="5.5" fill="#fff"/>
+  <ellipse cx="112" cy="110" rx="6.5" ry="5.5" fill="#fff"/>
+  <circle cx="89" cy="111" r="3.8" fill="#3b2507"/>
+  <circle cx="113" cy="111" r="3.8" fill="#3b2507"/>
+  <circle cx="90.2" cy="109.5" r="1.1" fill="#fff"/>
+  <circle cx="114.2" cy="109.5" r="1.1" fill="#fff"/>
+  <!-- Eyelashes -->
+  <path d="M82.5 106.5 Q85.5 103 88.5 106" stroke="#78350f" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M88 105.5 Q91 102 94 105.5" stroke="#78350f" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M106 105.5 Q109 102 112 105.5" stroke="#78350f" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M111.5 106.5 Q114.5 103 117.5 106" stroke="#78350f" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M97 118 Q100 127 103 118" stroke="#d4956a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <ellipse cx="96.5" cy="124" rx="2.5" ry="1.8" fill="#d4956a" opacity="0.4"/>
+  <ellipse cx="103.5" cy="124" rx="2.5" ry="1.8" fill="#d4956a" opacity="0.4"/>
+
+  <!-- Lips with color -->
+  <path d="M88 133 Q94 128.5 100 133 Q106 128.5 112 133" stroke="#c2185b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M88 133 Q100 142 112 133" stroke="#ad1457" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M89 134 Q100 141 111 134 Q106 130 100 133 Q94 130 89 134Z" fill="#e91e63" opacity="0.3"/>
+
+  <!-- Cheek blush -->
+  <ellipse cx="74" cy="120" rx="9" ry="5.5" fill="#f87171" opacity="0.28"/>
+  <ellipse cx="126" cy="120" rx="9" ry="5.5" fill="#f87171" opacity="0.28"/>
+</svg>
