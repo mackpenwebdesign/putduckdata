@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "putduckdata-backend",
   "version": "2.0.0",
   "description": "PutDuckData Ghana backend — single Vercel serverless function",
