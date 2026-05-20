@@ -168,9 +168,7 @@ const BuyData = () => {
             id: plan.id,
             name: plan.plan_name,
             price: parseFloat(plan.price),
-            validity: `${plan.validity_days} day${
-              plan.validity_days !== 1 ? "s" : ""
-            }`,
+            validity: "90 days",
             data: plan.data_volume,
             data_plan_id: plan.id,
           }));

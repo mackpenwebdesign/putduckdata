@@ -1,4 +1,4 @@
-import { authenticateUser, hasRole, checkMaintenanceMode } from '../utils/auth.js';
+import { authenticateUser, hasRole, checkMaintenanceMode, verifyAdminFromDB } from '../utils/auth.js';
 import { successResponse, errorResponse, corsResponse } from '../utils/response.js';
 import { executeQuery } from '../utils/db.js';
 
@@ -41,6 +41,7 @@ export const handler = async (event) => {
       const auth = await authenticateUser(event.headers);
       if (!auth.authenticated) return errorResponse(401, 'Authentication required');
       if (!hasRole(auth.user, 'admin')) return errorResponse(403, 'Admin access required');
+      if (!(await verifyAdminFromDB(auth.user.id))) return errorResponse(403, 'Admin access required');
 
       const body = JSON.parse(event.body);
       const { settings } = body;
@@ -63,11 +64,11 @@ export const handler = async (event) => {
         )
       `);
 
+      let manualModeEnabled = false;
+
       for (const setting of settings) {
         if (!allowedKeys.includes(setting.key)) continue;
 
-        // Always JSON.stringify so the value is valid JSONB
-        // e.g. true → 'true', "hello" → '"hello"', "" → '""'
         const jsonValue = JSON.stringify(setting.value);
 
         await executeQuery(
@@ -76,6 +77,23 @@ export const handler = async (event) => {
            ON CONFLICT (setting_key)
            DO UPDATE SET setting_value = $2::jsonb, updated_by = $3, updated_at = CURRENT_TIMESTAMP`,
           [setting.key, jsonValue, auth.user.id]
+        );
+
+        if (setting.key === 'data_provider' && setting.value === 'manual') {
+          manualModeEnabled = true;
+        }
+      }
+
+      // When switching to manual mode, move all undelivered pending data orders to manual queue
+      if (manualModeEnabled) {
+        await executeQuery(
+          `UPDATE transactions
+           SET metadata = metadata || '{"needs_manual_fulfil": true}'::jsonb,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE type IN ('data_purchase', 'guest_data_purchase')
+             AND status IN ('pending', 'processing')
+             AND (metadata->>'provider_reference' IS NULL OR metadata->>'provider_reference' = '')
+             AND (metadata->>'delivery_attempted' IS NULL OR metadata->>'delivery_attempted' = 'false')`
         );
       }
 

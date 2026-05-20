@@ -264,12 +264,7 @@ export const handler = async (event) => {
             ? "http://localhost:5173"
             : process.env.FRONTEND_URL || "https://putduckdata.com"
         }/payment/verify?guest=true`,
-        // SECURITY: Only allow Mobile Money - blocks card payments/hacking
-        channel: "mobile_money",
-        mobile_money: {
-          phone: phone_number,
-          provider: "mtn", // Default to MTN - Paystack will show MoMo picker
-        },
+        channels: ["mobile_money"],
         metadata: {
           guest: true,
           transaction_type: "guest_data_purchase",

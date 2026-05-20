@@ -622,7 +622,7 @@ const PlanTable = ({ plans, onToggle, onDelete, onEdit, togglingId, deletingId }
             </td>
             <td className="px-6 py-4">
               <span className="text-dark-300 text-sm">
-                {plan.validity_days} day{plan.validity_days !== 1 ? 's' : ''}
+                90 days
               </span>
             </td>
             <td className="px-6 py-4 text-right">

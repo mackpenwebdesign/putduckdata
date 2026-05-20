@@ -1,4 +1,4 @@
-import { authenticateUser, hasRole } from "../utils/auth.js";
+import { authenticateUser, hasRole, verifyAdminFromDB } from "../utils/auth.js";
 import {
   successResponse,
   errorResponse,
@@ -15,6 +15,7 @@ export const handler = async (event) => {
     const auth = await authenticateUser(event.headers);
     if (!auth.authenticated) return errorResponse(401, "Auth required");
     if (!hasRole(auth.user, "admin")) return errorResponse(403, "Admin only");
+    if (!(await verifyAdminFromDB(auth.user.id))) return errorResponse(403, "Admin only");
 
     const params = event.queryStringParameters || {};
     const dateFilter = params.date || "today";

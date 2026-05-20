@@ -2,21 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import {
   RefreshCw,
   CheckCircle,
-  Zap,
   ShieldCheck,
   ClipboardList,
   Loader2,
+  Wallet,
 } from "lucide-react";
 import Button from "../../components/Button";
 import api from "../../utils/api";
 import { toast } from "react-hot-toast";
-
-const FEATURES = [
-  "Automatic delivery (0–5 min)",
-  "MTN, Telecel & AirtelTigo",
-  "Auto-refund on failure",
-  "Pay-as-you-go — no balance top-up",
-];
 
 const AdminProvider = () => {
   const [syncLoading, setSyncLoading] = useState(false);
@@ -24,6 +17,8 @@ const AdminProvider = () => {
   const [isManual, setIsManual] = useState(false);
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const [balance, setBalance] = useState(null);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -64,6 +59,20 @@ const AdminProvider = () => {
       setToggling(false);
     }
   };
+
+  const handleCheckBalance = useCallback(async () => {
+    setBalanceLoading(true);
+    try {
+      const res = await api.get("/admin-provider?action=balance");
+      const result = res?.data ?? res;
+      setBalance(result.balance ?? result);
+      toast.success("Balance fetched");
+    } catch (error) {
+      toast.error(`Balance check failed: ${error.message || "Try again"}`);
+    } finally {
+      setBalanceLoading(false);
+    }
+  }, []);
 
   const handleSyncPrices = useCallback(async () => {
     setSyncLoading(true);
@@ -122,7 +131,7 @@ const AdminProvider = () => {
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${!isManual ? "bg-primary-600/15 border border-primary-600/20" : "bg-dark-800"}`}>
-              <Zap className={`w-6 h-6 ${!isManual ? "text-primary-400" : "text-dark-500"}`} />
+              <ShieldCheck className={`w-6 h-6 ${!isManual ? "text-primary-400" : "text-dark-500"}`} />
             </div>
             <div>
               <h3 className="text-white font-bold text-base">1Papi</h3>
@@ -139,17 +148,22 @@ const AdminProvider = () => {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4">
-          {FEATURES.map((feat) => (
-            <div key={feat} className="flex items-center gap-2">
-              <CheckCircle className={`w-3.5 h-3.5 flex-shrink-0 ${!isManual ? "text-green-400" : "text-dark-600"}`} />
-              <span className={`text-xs ${!isManual ? "text-dark-300" : "text-dark-600"}`}>{feat}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Sync button */}
-        <div className="border-t border-dark-700/50 pt-4">
+        {/* Balance + Sync buttons */}
+        <div className="border-t border-dark-700/50 pt-4 space-y-2">
+          <Button
+            onClick={handleCheckBalance}
+            loading={balanceLoading}
+            variant="secondary"
+            className="w-full justify-center"
+          >
+            <Wallet className="w-4 h-4 mr-2" />
+            {balanceLoading ? "Checking…" : "Check Balance"}
+          </Button>
+          {balance !== null && (
+            <p className="text-xs text-center text-green-400 font-medium">
+              {typeof balance === "object" ? JSON.stringify(balance) : String(balance)}
+            </p>
+          )}
           <Button
             onClick={handleSyncPrices}
             loading={syncLoading}
@@ -158,7 +172,7 @@ const AdminProvider = () => {
             <RefreshCw className={`w-4 h-4 mr-2 ${syncLoading ? "animate-spin" : ""}`} />
             {syncLoading ? "Syncing prices…" : "Sync Prices from 1Papi"}
           </Button>
-          <p className="text-xs text-dark-500 mt-2 text-center">
+          <p className="text-xs text-dark-500 mt-1 text-center">
             {lastSynced
               ? `Last synced: ${lastSynced.toLocaleTimeString()}`
               : "Pulls live cost prices from 1Papi and updates your plan rates"}
@@ -209,17 +223,6 @@ const AdminProvider = () => {
         )}
       </div>
 
-      {/* API key reminder */}
-      <div className="flex items-start gap-3 bg-dark-900/60 border border-dark-800 rounded-xl px-4 py-3">
-        <ShieldCheck className="w-4 h-4 text-primary-400 flex-shrink-0 mt-0.5" />
-        <p className="text-dark-400 text-xs">
-          Your API key is stored as{" "}
-          <span className="font-mono text-white bg-dark-700 px-1.5 py-0.5 rounded text-[11px]">
-            ONEPAPI_API_KEY
-          </span>{" "}
-          in your environment variables.
-        </p>
-      </div>
     </div>
   );
 };

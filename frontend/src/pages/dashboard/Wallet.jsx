@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Wallet as WalletIcon,
   Plus,
@@ -19,12 +19,14 @@ import { formatCurrency } from "../../utils/formatters";
 import { toast } from "react-hot-toast";
 
 const Wallet = () => {
-  const { user } = useAuthStore();
+  const { user, refreshUser } = useAuthStore();
   const [amount, setAmount] = useState("");
   const [momoPhone, setMomoPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [showBal, setShowBal] = useState(true);
+
+  useEffect(() => { refreshUser(); }, []);
 
   const handleFundWallet = async (e) => {
     e.preventDefault();

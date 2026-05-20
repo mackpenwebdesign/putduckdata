@@ -1,4 +1,4 @@
-import { authenticateUser, hasRole } from "../utils/auth.js";
+import { authenticateUser, hasRole, verifyAdminFromDB } from "../utils/auth.js";
 import {
   successResponse,
   errorResponse,
@@ -34,6 +34,8 @@ export const handler = async (event) => {
     if (!auth.authenticated)
       return errorResponse(401, "Authentication required");
     if (!hasRole(auth.user, "admin"))
+      return errorResponse(403, "Admin access required");
+    if (!(await verifyAdminFromDB(auth.user.id)))
       return errorResponse(403, "Admin access required");
 
     // ── GET — list payments ──────────────────────────────────────────────────

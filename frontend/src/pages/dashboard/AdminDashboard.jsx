@@ -435,6 +435,7 @@ const FundWalletModal = ({ open, onClose, onSuccess }) => {
   const [operation, setOperation] = useState("credit");
   const [searching, setSearching] = useState(false);
   const [funding, setFunding] = useState(false);
+  const { user: currentUser, refreshUser } = useAuthStore();
 
   const resetForm = () => {
     setSearchQuery("");
@@ -491,6 +492,9 @@ const FundWalletModal = ({ open, onClose, onSuccess }) => {
           operation === "deduct" ? "deducted from" : "funded to"
         } ${selectedUser.full_name}`
       );
+      if (currentUser && selectedUser.id === currentUser.id) {
+        await refreshUser();
+      }
       resetForm();
       onClose();
       if (onSuccess) onSuccess();

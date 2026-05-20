@@ -1,4 +1,4 @@
-import { authenticateUser, hasRole } from '../utils/auth.js';
+import { authenticateUser, hasRole, verifyAdminFromDB } from '../utils/auth.js';
 import { successResponse, errorResponse, corsResponse } from '../utils/response.js';
 import { executeQuery, executeTransaction } from '../utils/db.js';
 import { generateReference } from '../utils/security.js';
@@ -12,6 +12,7 @@ export const handler = async (event) => {
     const auth = await authenticateUser(event.headers);
     if (!auth.authenticated) return errorResponse(401, 'Authentication required');
     if (!hasRole(auth.user, 'admin')) return errorResponse(403, 'Admin access required');
+    if (!(await verifyAdminFromDB(auth.user.id))) return errorResponse(403, 'Admin access required');
 
     const body = JSON.parse(event.body);
     const { user_id, amount, reason, operation } = body;

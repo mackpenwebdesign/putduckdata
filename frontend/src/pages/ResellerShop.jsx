@@ -78,7 +78,7 @@ const PlanCard = ({ plan, selected, onSelect, primaryColor }) => {
       </div>
       <div className="flex items-center gap-1 text-dark-500 text-[11px] mb-3">
         <Clock className="w-3 h-3" />
-        {plan.validity_days}d validity
+        90d validity
       </div>
       <div className="text-base font-bold" style={{ color: primaryColor }}>
         {formatCurrency(plan.price)}
@@ -453,7 +453,7 @@ export default function ResellerShop() {
                   {selectedPlan?.data_volume} · {nm.label}
                 </p>
                 <p className="text-dark-500 text-[11px]">
-                  {selectedPlan?.validity_days}d validity
+                  90d validity
                 </p>
               </div>
             </div>

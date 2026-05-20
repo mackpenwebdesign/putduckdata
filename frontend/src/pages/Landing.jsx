@@ -1056,7 +1056,7 @@ const Landing = () => {
                             {plan.data_volume}
                           </h3>
                           <p className="text-dark-400 text-xs mb-3">
-                            {plan.plan_name} &middot; {plan.validity_days} days
+                            {plan.plan_name} &middot; 90 days
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-white font-bold text-xl">

@@ -178,9 +178,7 @@ const BuyPage = () => {
             id: plan.id,
             name: plan.plan_name,
             price: parseFloat(plan.price),
-            validity: `${plan.validity_days} day${
-              plan.validity_days !== 1 ? "s" : ""
-            }`,
+            validity: "90 days",
             data: plan.data_volume,
             data_plan_id: plan.id,
           }));
@@ -299,7 +297,7 @@ const BuyPage = () => {
       <div>
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
           {/* Page header */}
-          <div className="mb-6 text-center sm:text-left">
+          <div className="mb-6 text-center">
             <h1
               className="text-4xl sm:text-3xl text-white mb-1"
               style={{ fontFamily: "Anton, sans-serif" }}
@@ -314,7 +312,7 @@ const BuyPage = () => {
           </div>
 
           {/* Network tabs */}
-          <div className="flex justify-center sm:justify-start gap-2 mb-5">
+          <div className="flex justify-center gap-2 mb-5">
             {NETWORKS.map((network) => {
               const c = NETWORK_COLORS[network.id];
               const isActive = activeTab === network.id;
@@ -322,16 +320,16 @@ const BuyPage = () => {
                 <button
                   key={network.id}
                   onClick={() => setActiveTab(network.id)}
-                  className={`flex items-center justify-center sm:justify-start gap-2 px-4 py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${
                     isActive ? c.tab : c.tabInactive
                   }`}
                 >
                   <img
                     src={network.logo}
                     alt={network.name}
-                    className="h-5 object-contain mx-auto sm:mx-0"
+                    className="h-5 object-contain mx-auto"
                   />
-                  <span className="hidden sm:inline">{network.name}</span>
+                  <span>{network.name}</span>
                 </button>
               );
             })}

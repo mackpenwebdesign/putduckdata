@@ -133,12 +133,7 @@ export const handler = async (event) => {
             ? "http://localhost:5173"
             : process.env.FRONTEND_URL || "https://putduckdata.com"
         }/payment/verify`,
-        // SECURITY: Only allow Mobile Money - blocks card payments
-        channel: "mobile_money",
-        mobile_money: {
-          phone: user.phone_number || "0540000000", // Use user reg phone or default
-          provider: "mtn",
-        },
+        channels: ["mobile_money"],
         metadata: {
           user_id: user.id,
           full_name: user.full_name,

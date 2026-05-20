@@ -247,8 +247,8 @@ function App() {
 
   useEffect(() => {
     const init = async () => {
-      await checkMaintenance();
       setLoading(false);
+      checkMaintenance();
     };
     init();
 

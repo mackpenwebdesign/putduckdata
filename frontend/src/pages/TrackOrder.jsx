@@ -272,33 +272,13 @@ const TrackOrder = () => {
                   </span>
                 </div>
               )}
-              {/* Volume MB */}
-              {order.volume_mb && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-dark-500 flex items-center gap-2">
-                    <Database className="w-4 h-4" /> Volume Size (MB)
-                  </span>
-                  <span className="text-white font-medium font-mono text-xs flex items-center">
-                    {order.volume_mb} MB
-                    <CopyBtn text={String(order.volume_mb)} label="Volume MB" />
-                  </span>
-                </div>
-              )}
-              {/* Validity */}
-              {order.validity_days && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-dark-500 flex items-center gap-2">
-                    <Timer className="w-4 h-4" /> Validity
-                  </span>
-                  <span className="text-white font-medium flex items-center">
-                    {order.validity_days} days
-                    <CopyBtn
-                      text={String(order.validity_days)}
-                      label="Validity days"
-                    />
-                  </span>
-                </div>
-              )}
+              {/* Validity — always 90 days */}
+              <div className="flex items-center justify-between py-2">
+                <span className="text-dark-500 flex items-center gap-2">
+                  <Timer className="w-4 h-4" /> Validity
+                </span>
+                <span className="text-white font-medium">90 days</span>
+              </div>
               {/* Purchase Date */}
               {order.purchase_date && (
                 <div className="flex items-center justify-between py-2">
@@ -307,21 +287,6 @@ const TrackOrder = () => {
                   </span>
                   <span className="text-white font-medium">
                     {new Date(order.purchase_date).toLocaleString("en-GH")}
-                  </span>
-                </div>
-              )}
-              {/* Provider Ref */}
-              {order.provider_reference && (
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-dark-500 flex items-center gap-2">
-                    <Hash className="w-4 h-4" /> Provider Ref
-                  </span>
-                  <span className="text-white font-medium font-mono text-xs flex items-center">
-                    {order.provider_reference}
-                    <CopyBtn
-                      text={order.provider_reference}
-                      label="Provider Ref"
-                    />
                   </span>
                 </div>
               )}

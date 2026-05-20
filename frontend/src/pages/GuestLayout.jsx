@@ -8,8 +8,6 @@ import {
   X,
   HelpCircle,
   UserPlus,
-  Sprout,
-  LogIn,
 } from "lucide-react";
 import { Sun, Moon } from "@phosphor-icons/react";
 import useThemeStore from "../stores/themeStore";
@@ -19,15 +17,6 @@ import BroadcastModal from "../components/BroadcastModal.jsx";
 const GUEST_NAV = [
   { name: "Buy Data", path: "/buy", icon: Wifi },
   { name: "Track Order", path: "/track-order", icon: Search },
-  { name: "Login", path: "/login", icon: LogIn },
-];
-
-const AFA_NAV = [
-  {
-    name: "AFA Registration",
-    path: "/guest-afa",
-    icon: Sprout,
-  },
 ];
 const GuestLayout = ({ children }) => {
   const location = useLocation();
@@ -67,7 +56,7 @@ const GuestLayout = ({ children }) => {
                 <img
                   src="/logo/logo.png"
                   alt="PutDuckData"
-                  className="h-12 sm:h-14 w-auto object-contain"
+                  className="h-10 sm:h-12 w-auto object-contain"
                 />
               </Link>
             </div>
@@ -162,25 +151,6 @@ const GuestLayout = ({ children }) => {
                 </div>
               </div>
 
-              {/* AFA section */}
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-dark-600 px-2 mb-1.5">
-                  AFA
-                </p>
-                <div className="space-y-0.5">
-                  {AFA_NAV.map(({ name, path, icon: Icon }) => (
-                    <Link
-                      key={path}
-                      to={path}
-                      onClick={() => setSidebarOpen(false)}
-                      className="group flex items-center gap-2.5 px-2.5 py-[7px] rounded-lg text-[13px] transition-all text-dark-400 hover:bg-dark-800/50 hover:text-dark-200"
-                    >
-                      <Icon className="w-[18px] h-[18px] text-primary-400" />
-                      <span className="truncate">{name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
             </nav>
 
             {/* Bottom */}

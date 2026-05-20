@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import useAuthStore from "../../stores/authStore";
 import {
   Search,
   RefreshCw,
@@ -18,6 +19,7 @@ import {
   ClipboardList,
   RotateCcw,
   AlertTriangle,
+  ShieldCheck,
 } from "lucide-react";
 import Badge from "../../components/Badge";
 import Button from "../../components/Button";
@@ -102,8 +104,10 @@ const AdminOrders = () => {
   const [expandedId, setExpandedId] = useState(null);
   const [showFundModal, setShowFundModal] = useState(false);
   const [syncingOrders, setSyncingOrders] = useState(false);
+  const [verifyingPending, setVerifyingPending] = useState(false);
   const [updatingTx, setUpdatingTx] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const refreshUser = useAuthStore((s) => s.refreshUser);
 
   const fetchOrders = useCallback(
     async (offset = 0) => {
@@ -152,6 +156,20 @@ const AdminOrders = () => {
       toast.error(err?.message || "Failed to update order");
     } finally {
       setUpdatingTx(null);
+    }
+  };
+
+  const verifyAllPending24h = async () => {
+    setVerifyingPending(true);
+    try {
+      const res = await api.put("/admin-orders", { action: "verify_pending_24h" });
+      const d = res.data || res;
+      toast.success(d.message || `Verified: ${d.placed || 0} placed, ${d.failed || 0} failed`);
+      fetchOrders();
+    } catch (err) {
+      toast.error(err?.message || "Bulk verify failed");
+    } finally {
+      setVerifyingPending(false);
     }
   };
 
@@ -214,6 +232,16 @@ const AdminOrders = () => {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={verifyAllPending24h}
+            disabled={verifyingPending}
+            className="border-primary-600/40 text-primary-400 hover:bg-primary-600/10"
+          >
+            <ShieldCheck className={`w-4 h-4 mr-1 ${verifyingPending ? "animate-pulse" : ""}`} />
+            {verifyingPending ? "Verifying..." : "Verify Pending (24h)"}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -437,6 +465,11 @@ const AdminOrders = () => {
                             {tx.recipient_phone || tx.metadata?.phone_number}
                           </span>
                         )}
+                        {tx.metadata?.data_volume && (
+                          <span className="text-primary-500 text-[10px] font-semibold flex-shrink-0">
+                            {tx.metadata.data_volume}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -657,6 +690,7 @@ const FundUserModal = ({ onClose, onSuccess }) => {
   const [operation, setOperation] = useState("credit"); // 'credit' | 'deduct'
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
+  const { user: currentUser, refreshUser } = useAuthStore();
 
   const searchUsers = async () => {
     if (!searchQuery.trim()) return;
@@ -696,6 +730,10 @@ const FundUserModal = ({ onClose, onSuccess }) => {
             selectedUser.full_name
           }`
       );
+      // Refresh auth store so wallet balance updates immediately for the logged-in admin
+      if (currentUser && selectedUser.id === currentUser.id) {
+        await refreshUser();
+      }
       onSuccess();
       onClose();
     } catch (err) {

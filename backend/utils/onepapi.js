@@ -5,8 +5,9 @@
  *
  * Endpoints:
  *   GET  /api/v1/plans?network=MTN|TELECEL|AIRTEL_TIGO
- *   POST /api/v1/buy
- *   GET  /api/v1/status?reference=...
+ *   POST /api/v1/buy  → returns status:"processing" + poll_url + poll_again_in_seconds:30
+ *   GET  /api/v1/status?reference=...  → "pending"|"processing" DB states both return "processing"
+ *   GET  /api/v1/balance  → { balance, currency, price_tier, orders:{total,completed,processing,failed,...} }
  */
 
 const BASE_URL = process.env.ONEPAPI_API_URL || "https://www.1papi.com/api/v1";
@@ -158,19 +159,34 @@ export const buyData = async (phone, planId, webhookUrl) => {
     body: JSON.stringify(body),
   });
 
+  const data = res?.data || {};
   return {
     success: res?.success,
     message: res?.message,
-    ...(res?.data || {}),
+    status: data.status || (res?.success ? "processing" : "failed"),
+    poll_url: data.poll_url ?? null,
+    poll_again_in_seconds: data.poll_again_in_seconds ?? null,
+    ...data,
   };
 };
 
 /**
+ * Fetch account balance and order stats from 1Papi.
+ * Returns: { balance, currency, price_tier, orders: { total, completed, processing, failed, total_spent, spent_last_30d } }
+ */
+export const fetchBalance = async () => {
+  const res = await request("/balance", { method: "GET" });
+  return res?.data ?? res;
+};
+
+/**
  * Check order status by reference.
+ * Provider maps both "pending" and "processing" DB states to "processing".
+ * Also returns: provider, provider_ref, needs_manual, poll_again_in_seconds
  */
 export const checkOrderStatus = async (reference) => {
   const res = await request(
     `/status?reference=${encodeURIComponent(reference)}`
   );
-  return res?.data ?? res?.data;
+  return res?.data ?? res;
 };

@@ -1,4 +1,4 @@
-import { authenticateUser, hasRole } from '../utils/auth.js';
+import { authenticateUser, hasRole, verifyAdminFromDB } from '../utils/auth.js';
 import { successResponse, errorResponse, corsResponse } from '../utils/response.js';
 import { executeQuery } from '../utils/db.js';
 
@@ -30,6 +30,9 @@ export const handler = async (event) => {
 
     // Check admin role
     if (!hasRole(auth.user, 'admin')) {
+      return errorResponse(403, 'Admin access required');
+    }
+    if (!(await verifyAdminFromDB(auth.user.id))) {
       return errorResponse(403, 'Admin access required');
     }
 

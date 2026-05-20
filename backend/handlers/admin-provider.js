@@ -1,11 +1,11 @@
 import { executeQuery, executeTransaction } from "../utils/db.js";
-import { authenticateUser, hasRole } from "../utils/auth.js";
+import { authenticateUser, hasRole, verifyAdminFromDB } from "../utils/auth.js";
 import {
   successResponse,
   errorResponse,
   corsResponse,
 } from "../utils/response.js";
-import { fetchPlans, checkOrderStatus } from "../utils/onepapi.js";
+import { fetchPlans, checkOrderStatus, fetchBalance } from "../utils/onepapi.js";
 import {
   createNotification,
   NotificationType,
@@ -29,6 +29,9 @@ export const handler = async (event) => {
     if (!hasRole(auth.user, "admin")) {
       return errorResponse(403, "Admin access required");
     }
+    if (!(await verifyAdminFromDB(auth.user.id))) {
+      return errorResponse(403, "Admin access required");
+    }
 
     const action = event.queryStringParameters?.action;
 
@@ -36,7 +39,8 @@ export const handler = async (event) => {
     if (event.httpMethod === "GET") {
       switch (action) {
         case "balance": {
-          return errorResponse(501, "Balance check not supported by 1Papi");
+          const bal = await fetchBalance();
+          return successResponse(200, bal);
         }
 
         case "plans": {
@@ -123,6 +127,7 @@ export const handler = async (event) => {
               const providerStatus = await checkOrderStatus(providerRef);
               const status = (providerStatus.status || "").toLowerCase();
 
+              // Provider returns "processing" for both our "pending" and "processing" DB states
               if (["completed", "success", "delivered"].includes(status)) {
                 await executeQuery(
                   `UPDATE transactions

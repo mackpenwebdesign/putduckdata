@@ -210,6 +210,7 @@ export const handler = async (event) => {
           callback_url: `${
             process.env.FRONTEND_URL || "https://putduckdata.com"
           }/payment/verify?type=afa`,
+          channels: ["mobile_money"],
           metadata: {
             transaction_type: "afa_registration",
             user_id: auth.user.id,

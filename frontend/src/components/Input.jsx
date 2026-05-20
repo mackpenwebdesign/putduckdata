@@ -32,7 +32,7 @@ const Input = ({
             w-full bg-dark-900 border border-dark-700 rounded-lg px-4 py-2.5
             ${Icon ? 'pl-10' : ''}
             ${isPassword ? 'pr-10' : ''}
-            text-white placeholder-dark-500
+            text-base text-white placeholder-dark-500
             focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent
             transition-smooth
             ${error ? 'border-red-500' : ''}

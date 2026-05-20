@@ -329,7 +329,7 @@ export default function ResellerDashboard() {
               <div key={plan.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-dark-800/20 transition-colors">
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold">{plan.data_volume}</p>
-                  <p className="text-dark-500 text-xs">{plan.validity_days}d validity</p>
+                  <p className="text-dark-500 text-xs">90d validity</p>
                 </div>
 
                 <div className="text-right flex-shrink-0 hidden sm:block">

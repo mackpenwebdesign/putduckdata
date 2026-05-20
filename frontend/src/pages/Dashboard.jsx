@@ -375,7 +375,7 @@ const Dashboard = () => {
               <img
                 src="/logo/logo.png"
                 alt="PutDuckData"
-                className="h-12 sm:h-14 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain"
               />
             </Link>
           </div>

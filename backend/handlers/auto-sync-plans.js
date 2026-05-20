@@ -5,7 +5,7 @@ import {
   errorResponse,
   corsResponse,
 } from "../utils/response.js";
-import { authenticateUser, hasRole } from "../utils/auth.js";
+import { authenticateUser, hasRole, verifyAdminFromDB } from "../utils/auth.js";
 
 /**
  * Auto Sync Data Plans from 1Papi
@@ -19,6 +19,9 @@ export const handler = async (event) => {
   try {
     const auth = await authenticateUser(event.headers);
     if (!auth.authenticated || !hasRole(auth.user, "admin")) {
+      return errorResponse(403, "Admin access required");
+    }
+    if (!(await verifyAdminFromDB(auth.user.id))) {
       return errorResponse(403, "Admin access required");
     }
 
