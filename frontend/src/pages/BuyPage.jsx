@@ -10,7 +10,6 @@ import {
   Download,
   ChevronLeft,
   ArrowRight,
-  Zap,
 } from "lucide-react";
 import Button from "../components/Button";
 import Input from "../components/Input";
@@ -267,10 +266,7 @@ const BuyPage = () => {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center gap-2 bg-primary-600/10 border border-primary-600/20 rounded-full px-3 py-1 mb-4">
-            <Zap className="w-3 h-3 text-primary-400" />
-            <span className="text-primary-400 text-xs font-semibold">Instant Delivery · 90 Days</span>
-          </div>
+
           <h1 className="text-3xl sm:text-4xl font-black text-white mb-2 tracking-tight">
             Buy Data
           </h1>
