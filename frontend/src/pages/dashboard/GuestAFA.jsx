@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
-import { Phone, User, Mail, Wifi, Zap, CreditCard } from "lucide-react";
+import { Phone, User, Mail, Wifi, CreditCard } from "lucide-react";
 import api from "../../utils/api";
 import { toast } from "react-hot-toast";
 
@@ -54,7 +54,7 @@ const GuestAFA = () => {
     <div className="min-h-screen bg-dark-950 p-6">
       <div className="max-w-md mx-auto bg-dark-900 border border-dark-800 rounded-2xl p-8 space-y-6 shadow-2xl">
         <div className="text-center">
-          <Zap className="w-16 h-16 text-primary-500 mx-auto mb-4" />
+          <Wifi className="w-16 h-16 text-primary-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">
             Guest AFA Order
           </h1>

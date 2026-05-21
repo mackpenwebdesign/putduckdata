@@ -21,7 +21,7 @@ import {
 } from "../utils/transaction-integrity.js";
 
 // Paystack fee: 2.10%
-const calculatePaystackFee = (amount) => Math.round(amount * 0.021 * 100) / 100;
+const calculatePaystackFee = (amount) => Math.round(amount * 0.019 * 100) / 100;
 
 const NETWORK_PREFIXES = {
   MTN: ["024", "025", "053", "054", "055", "059"],
@@ -234,7 +234,7 @@ export const handler = async (event) => {
           provider_plan_id: plan.provider_plan_id,
           total_charged: totalCharge,
           fee,
-          fee_type: "2.1pct",
+          fee_type: "1.9pct",
           reseller_code: reseller_code || null,
           reseller_id: resellerId,
           reseller_commission: resellerCommissionAmount,
@@ -259,11 +259,7 @@ export const handler = async (event) => {
         amount: Math.round(totalCharge * 100), // Paystack uses pesewas
         currency: "GHS",
         reference,
-        callback_url: `${
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:5173"
-            : process.env.FRONTEND_URL || "https://putduckdata.com"
-        }/payment/verify?guest=true`,
+        callback_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/payment/verify?guest=true`,
         channels: ["mobile_money"],
         metadata: {
           guest: true,

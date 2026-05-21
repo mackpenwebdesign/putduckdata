@@ -20,7 +20,7 @@ import {
 import { signTransaction } from "../utils/transaction-integrity.js";
 
 // Paystack fee: 2.9%
-const calculatePaystackFee = (amount) => Math.round(amount * 0.029 * 100) / 100;
+const calculatePaystackFee = (amount) => Math.round(amount * 0.019 * 100) / 100;
 
 /**
  * Initialize Paystack Payment
@@ -128,11 +128,7 @@ export const handler = async (event) => {
         amount: Math.round(totalCharge * 100), // Paystack uses pesewas (1 GHS = 100 pesewas)
         currency: "GHS",
         reference,
-        callback_url: `${
-          process.env.NODE_ENV === "development"
-            ? "http://localhost:5173"
-            : process.env.FRONTEND_URL || "https://putduckdata.com"
-        }/payment/verify`,
+        callback_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/payment/verify`,
         channels: ["mobile_money"],
         metadata: {
           user_id: user.id,

@@ -6,7 +6,6 @@ import {
   CheckCircle,
   Loader2,
   ShieldCheck,
-  Zap,
   Clock,
   Star,
   ChevronRight,
@@ -360,11 +359,6 @@ export default function ResellerShop() {
           </h1>
           <p className="text-dark-400 text-sm">{tagline}</p>
           <div className="flex items-center justify-center gap-4 mt-4">
-            <div className="flex items-center gap-1.5 text-[11px] text-dark-500">
-              <Zap className="w-3.5 h-3.5 text-yellow-500" />
-              Instant delivery
-            </div>
-            <div className="w-px h-3 bg-dark-800" />
             <div className="flex items-center gap-1.5 text-[11px] text-dark-500">
               <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
               Secure payment

@@ -1,63 +1,58 @@
 import { useState, useEffect } from "react";
 import {
   Wallet as WalletIcon,
-  Plus,
-  Smartphone,
   Shield,
   ArrowRight,
   Eye,
   EyeOff,
-  Zap,
   Clock,
   CheckCircle,
+  CreditCard,
+  Smartphone,
 } from "lucide-react";
-import Button from "../../components/Button";
 import Input from "../../components/Input";
 import useAuthStore from "../../stores/authStore";
 import api from "../../utils/api";
 import { formatCurrency } from "../../utils/formatters";
 import { toast } from "react-hot-toast";
 
+const PAYSTACK_FEE_RATE = 0.019;
+
 const Wallet = () => {
   const { user, refreshUser } = useAuthStore();
   const [amount, setAmount] = useState("");
-  const [momoPhone, setMomoPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [showBal, setShowBal] = useState(true);
 
   useEffect(() => { refreshUser(); }, []);
 
-  const handleFundWallet = async (e) => {
+  const quickAmounts = [10, 20, 50, 100, 200, 500];
+  const amt = parseFloat(amount);
+  const hasValidAmount = amount && amt >= 10;
+  const fee = hasValidAmount ? Math.round(amt * PAYSTACK_FEE_RATE * 100) / 100 : 0;
+  const totalCharge = hasValidAmount ? Math.round((amt + fee) * 100) / 100 : 0;
+
+  const handleFund = async (e) => {
     e.preventDefault();
-    if (!amount || parseFloat(amount) < 10) {
+    if (!hasValidAmount) {
       toast.error("Minimum funding amount is GH₵10");
-      return;
-    }
-    if (!momoPhone || !/^0\d{9}$/.test(momoPhone)) {
-      toast.error("Enter a valid 10-digit MoMo number (starts with 0)");
       return;
     }
     setLoading(true);
     try {
-      await api.post("/momo-payment-submit", {
-        amount: parseFloat(amount),
-        phone_number: momoPhone,
-        transaction_type: "wallet_fund",
-      });
-      setSubmitted(true);
-      toast.success("MoMo request submitted! Admin will approve shortly.");
+      const res = await api.post("/payment-initialize", { amount: amt });
+      const d = res.data || res;
+      if (d.authorization_url) {
+        window.location.href = d.authorization_url;
+      } else {
+        toast.error("Could not start payment. Please try again.");
+      }
     } catch (error) {
-      toast.error(error.error || "Failed to submit MoMo request");
+      toast.error(error?.error || error?.message || "Payment initialization failed");
     } finally {
       setLoading(false);
     }
   };
-
-  const quickAmounts = [10, 20, 50, 100, 200, 500];
-
-  const amt = parseFloat(amount);
-  const hasValidAmount = amount && amt >= 10;
 
   return (
     <div className="space-y-5">
@@ -65,13 +60,13 @@ const Wallet = () => {
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-white">Wallet</h1>
         <p className="text-dark-400 text-sm mt-0.5">
-          Fund your account via Mobile Money
+          Fund your account instantly via Mobile Money
         </p>
       </div>
 
       {/* Balance Card */}
       <div
-        className="relative overflow-hidden rounded-2xl p-5 sm:p-7"
+        className="wallet-hero-card relative overflow-hidden rounded-2xl p-5 sm:p-7"
         style={{
           background:
             "linear-gradient(135deg, #dc2626 0%, #b91c1c 55%, #991b1b 100%)",
@@ -106,157 +101,116 @@ const Wallet = () => {
 
         <div className="relative z-10 flex items-center gap-4 mt-4 pt-4 border-t border-white/15">
           <div className="flex items-center gap-1.5">
-            <Zap className="w-3.5 h-3.5 text-yellow-300" />
-            <span className="text-white/75 text-xs">Fast credit</span>
+            <CheckCircle className="w-3.5 h-3.5 text-green-300" />
+            <span className="text-white/75 text-xs">Instant credit</span>
           </div>
           <div className="w-1 h-1 rounded-full bg-white/30" />
           <div className="flex items-center gap-1.5">
             <Shield className="w-3.5 h-3.5 text-green-300" />
-            <span className="text-white/75 text-xs">Secure MoMo payment</span>
+            <span className="text-white/75 text-xs">Secured by Paystack</span>
           </div>
         </div>
       </div>
 
       {/* Fund Form + How it Works */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        {/* MoMo Form */}
+        {/* Paystack Form */}
         <div className="lg:col-span-3 bg-dark-900/80 border border-dark-800 rounded-2xl p-5 sm:p-6">
-          {submitted ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
-                <CheckCircle className="w-8 h-8 text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold text-lg">Request Submitted!</h3>
-                <p className="text-dark-400 text-sm mt-1">
-                  Your MoMo funding request of{" "}
-                  <span className="text-primary-400 font-medium">{formatCurrency(parseFloat(amount))}</span>{" "}
-                  has been sent. An admin will approve and credit your wallet shortly.
-                </p>
-              </div>
-              <button
-                onClick={() => { setSubmitted(false); setAmount(""); setMomoPhone(""); }}
-                className="text-primary-400 hover:text-primary-300 text-sm font-medium transition-colors"
-              >
-                Submit another request
-              </button>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 bg-primary-600/10 rounded-xl flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-primary-500" />
             </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-10 h-10 bg-primary-600/10 rounded-xl flex items-center justify-center">
-                  <Smartphone className="w-5 h-5 text-primary-500" />
+            <div>
+              <h3 className="text-white font-semibold">Fund via Paystack</h3>
+              <p className="text-dark-500 text-xs">MTN MoMo · Telecel Cash · AT Money</p>
+            </div>
+          </div>
+
+          <form onSubmit={handleFund} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-2">
+                Amount (GH₵)
+              </label>
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="Enter amount (min GH₵10)"
+                min="10"
+                step="0.01"
+                required
+              />
+            </div>
+
+            {/* Quick amounts */}
+            <div>
+              <p className="text-xs text-dark-500 font-medium mb-2">Quick amounts</p>
+              <div className="grid grid-cols-3 gap-2">
+                {quickAmounts.map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => setAmount(q.toString())}
+                    className={`py-2.5 rounded-xl text-sm font-medium transition-all border ${
+                      amount === q.toString()
+                        ? "bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-900/30"
+                        : "bg-dark-800/40 border-dark-700/50 text-dark-300 hover:border-primary-600/40 hover:text-primary-400"
+                    }`}
+                  >
+                    GH₵{q}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {hasValidAmount && (
+              <div className="bg-dark-800/40 border border-dark-700/40 rounded-xl px-4 py-3 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-dark-400">Wallet credit</span>
+                  <span className="text-white font-medium">{formatCurrency(amt)}</span>
                 </div>
-                <div>
-                  <h3 className="text-white font-semibold">Fund via Mobile Money</h3>
-                  <p className="text-dark-500 text-xs">MTN MoMo · Telecel Cash · AT Money</p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-dark-400">Paystack fee (1.9%)</span>
+                  <span className="text-dark-400">{formatCurrency(fee)}</span>
+                </div>
+                <div className="h-px bg-dark-700/50 my-0.5" />
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-dark-300 font-medium">You pay via MoMo</span>
+                  <span className="text-white font-bold">{formatCurrency(totalCharge)}</span>
                 </div>
               </div>
+            )}
 
-              <form onSubmit={handleFundWallet} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-dark-300 mb-2">
-                    Amount (GH₵)
-                  </label>
-                  <Input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="Enter amount (min GH₵10)"
-                    min="10"
-                    step="0.01"
-                    required
-                  />
-                </div>
-
-                {/* Quick amounts */}
-                <div>
-                  <p className="text-xs text-dark-500 font-medium mb-2">Quick amounts</p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {quickAmounts.map((q) => (
-                      <button
-                        key={q}
-                        type="button"
-                        onClick={() => setAmount(q.toString())}
-                        className={`py-2.5 rounded-xl text-sm font-medium transition-all border ${
-                          amount === q.toString()
-                            ? "bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-900/30"
-                            : "bg-dark-800/40 border-dark-700/50 text-dark-300 hover:border-primary-600/40 hover:text-primary-400"
-                        }`}
-                      >
-                        GH₵{q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-dark-300 mb-2">
-                    Your MoMo Number
-                  </label>
-                  <Input
-                    type="tel"
-                    value={momoPhone}
-                    onChange={(e) => setMomoPhone(e.target.value)}
-                    placeholder="e.g. 0551234567"
-                    maxLength={10}
-                    required
-                  />
-                  <p className="text-dark-600 text-xs mt-1">
-                    The number you'll send payment from
-                  </p>
-                </div>
-
-                {hasValidAmount && (
-                  <div className="bg-dark-800/40 border border-dark-700/40 rounded-xl px-4 py-3 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-dark-400">Amount to credit</span>
-                      <span className="text-white font-medium">{formatCurrency(amt)}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-dark-400">Transaction fee</span>
-                      <span className="text-green-400">Free</span>
-                    </div>
-                    <div className="h-px bg-dark-700/50 my-0.5" />
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-dark-300 font-medium">You send via MoMo</span>
-                      <span className="text-white font-bold">{formatCurrency(amt)}</span>
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading || !hasValidAmount || !momoPhone}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm !text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
-                  style={{
-                    background:
-                      hasValidAmount && !loading
-                        ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
-                        : undefined,
-                    backgroundColor: !hasValidAmount || loading ? "#b91c1c" : undefined,
-                    boxShadow:
-                      hasValidAmount && !loading
-                        ? "0 4px 20px rgba(194,65,12,0.35)"
-                        : "none",
-                  }}
-                >
-                  {loading ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Smartphone className="w-4 h-4" />
-                      Submit MoMo Request
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </>
-          )}
+            <button
+              type="submit"
+              disabled={loading || !hasValidAmount}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm !text-white transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+              style={{
+                background:
+                  hasValidAmount && !loading
+                    ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)"
+                    : undefined,
+                backgroundColor: !hasValidAmount || loading ? "#b91c1c" : undefined,
+                boxShadow:
+                  hasValidAmount && !loading
+                    ? "0 4px 20px rgba(194,65,12,0.35)"
+                    : "none",
+              }}
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Redirecting to Paystack...
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-4 h-4" />
+                  Pay with Mobile Money
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
         </div>
 
         {/* How it Works */}
@@ -266,20 +220,20 @@ const Wallet = () => {
             {[
               {
                 step: "1",
-                title: "Enter Amount & Number",
-                desc: "Choose amount and enter your MoMo number (min GH₵10)",
+                title: "Enter Amount",
+                desc: "Choose how much to add to your wallet (min GH₵10)",
                 color: "from-primary-600 to-primary-700",
               },
               {
                 step: "2",
-                title: "Send Payment",
-                desc: "Send the exact amount to our MoMo number: 0322291381",
+                title: "Pay via Paystack",
+                desc: "You'll be redirected to Paystack's secure MoMo checkout",
                 color: "from-primary-700 to-primary-800",
               },
               {
                 step: "3",
-                title: "Wallet Credited",
-                desc: "Admin confirms and your balance is updated instantly",
+                title: "Wallet Credited Instantly",
+                desc: "Once payment is confirmed, your balance updates automatically",
                 color: "from-green-600 to-green-700",
               },
             ].map((s) => (
@@ -299,7 +253,7 @@ const Wallet = () => {
           <div className="mt-5 pt-4 border-t border-dark-800/50 flex items-center gap-2">
             <Clock className="w-4 h-4 text-yellow-400 flex-shrink-0" />
             <p className="text-dark-400 text-xs">
-              Approval usually within a few minutes during business hours
+              Payment is instant — wallet updates as soon as Paystack confirms
             </p>
           </div>
         </div>

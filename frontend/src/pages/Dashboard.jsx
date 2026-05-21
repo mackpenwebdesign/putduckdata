@@ -1055,7 +1055,7 @@ const DashboardOverview = () => {
         </div>
         {/* Balance strip */}
         <div
-          className="relative overflow-hidden px-4 py-3 flex items-center justify-between"
+          className="wallet-hero-card relative overflow-hidden px-4 py-3 flex items-center justify-between"
           style={{
             background:
               "linear-gradient(135deg, #dc2626 0%, #b91c1c 55%, #991b1b 100%)",
@@ -1132,7 +1132,7 @@ const DashboardOverview = () => {
           </div>
         </div>
         <div
-          className="sm:col-span-2 relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between min-h-[140px]"
+          className="wallet-hero-card sm:col-span-2 relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between min-h-[140px]"
           style={{
             background:
               "linear-gradient(135deg, #dc2626 0%, #b91c1c 55%, #991b1b 100%)",

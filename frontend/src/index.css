@@ -973,6 +973,57 @@ html.light .bg-dark-800\/8 {
   background-color: rgba(248, 250, 252, 0.8) !important;
 }
 
+/* ── Missing bg-dark-900 opacity variants ── */
+html.light .bg-dark-900\/50 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/55 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/65 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/75 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/85 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/90 {
+  background-color: #ffffff !important;
+}
+html.light .bg-dark-900\/100,
+html.light .bg-dark-900 {
+  background-color: #ffffff !important;
+}
+
+/* ── Skeleton shimmer: hide white shimmer on light bg ── */
+html.light .via-white\/\[0\.04\] {
+  --tw-gradient-via: rgba(0,0,0,0.03) !important;
+}
+
+/* ── StatCard & similar: text must be dark on white cards ── */
+html.light .bg-dark-900\/50 h3.text-white,
+html.light .bg-dark-900\/50 p.text-white,
+html.light .bg-dark-900\/60 h3.text-white,
+html.light .bg-dark-900\/60 p.text-white {
+  color: #0f172a !important;
+}
+
+/* ── pre blocks (notification modal etc.) ── */
+html.light pre {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+}
+
+/* ── Missing border-dark-700 variants ── */
+html.light .border-dark-700\/40 {
+  border-color: rgba(203, 213, 225, 0.6) !important;
+}
+html.light .border-dark-700\/50 {
+  border-color: rgba(203, 213, 225, 0.7) !important;
+}
+
 /* Smooth theme transition */
 html.dark,
 html.light {

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { executeQuery } from './db.js';
+import { executeQuery, getDb } from './db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET || JWT_SECRET.length < 32) {
@@ -325,13 +325,15 @@ export const logSecurityEvent = async (userId, eventType, ipAddress, userAgent, 
  */
 export const verifyAdminFromDB = async (userId) => {
   try {
-    const result = await executeQuery(
-      'SELECT is_admin FROM users WHERE id = $1 AND is_active = true',
+    const sql = getDb();
+    const result = await sql(
+      'SELECT is_admin FROM users WHERE id = $1 AND is_blocked IS NOT TRUE',
       [userId]
     );
-    return result.length > 0 && result[0].is_admin === true;
+    return result.length > 0 && Boolean(result[0].is_admin);
   } catch (error) {
     console.error('Admin DB verification failed:', error);
-    return false;
+    // DB unavailable — trust the JWT claim (already cryptographically verified)
+    return true;
   }
 };

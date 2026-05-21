@@ -44,18 +44,6 @@ const NotificationModal = ({ notif, onClose }) => {
             </a>
           )}
 
-          {notif.metadata &&
-            Object.keys(notif.metadata).length > 0 &&
-            user?.is_admin && (
-              <div className="mt-6">
-                <h4 className="text-sm font-semibold text-dark-300 mb-3">
-                  Details
-                </h4>
-                <pre className="bg-dark-800 text-xs rounded-lg p-3 overflow-x-auto font-mono">
-                  {JSON.stringify(notif.metadata, null, 2)}
-                </pre>
-              </div>
-            )}
         </div>
       </div>
     </div>

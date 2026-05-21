@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Wifi, Users, Eye, UserCheck } from "lucide-react";
+import { BarChart3, Wifi, Users } from "lucide-react";
 import AnalyticsChart from "../../components/AnalyticsChart";
 import DateRangePicker from "../../components/DateRangePicker";
 import Badge from "../../components/Badge";
@@ -66,9 +66,6 @@ const Analytics = () => {
     );
   }
 
-  const totalVisits = analyticsData?.visitors?.total_visits ?? 0;
-  const uniqueVisitors = analyticsData?.visitors?.unique_visitors ?? 0;
-  const visitorTrend = analyticsData?.visitors?.daily ?? [];
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
@@ -89,38 +86,8 @@ const Analytics = () => {
         />
       </div>
 
-      {/* Visitor Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-11 h-11 bg-purple-500/10 rounded-xl flex items-center justify-center shrink-0">
-            <Eye className="w-5 h-5 text-purple-400" />
-          </div>
-          <div>
-            <p className="text-dark-400 text-xs uppercase tracking-wider mb-0.5">
-              Total Visits
-            </p>
-            <p className="text-3xl font-bold text-white">
-              {totalVisits.toLocaleString()}
-            </p>
-            <p className="text-dark-500 text-xs mt-0.5">{dateFilter}</p>
-          </div>
-        </div>
-
-        <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-11 h-11 bg-cyan-500/10 rounded-xl flex items-center justify-center shrink-0">
-            <UserCheck className="w-5 h-5 text-cyan-400" />
-          </div>
-          <div>
-            <p className="text-dark-400 text-xs uppercase tracking-wider mb-0.5">
-              Unique Visitors
-            </p>
-            <p className="text-3xl font-bold text-white">
-              {uniqueVisitors.toLocaleString()}
-            </p>
-            <p className="text-dark-500 text-xs mt-0.5">{dateFilter}</p>
-          </div>
-        </div>
-
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
         <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 flex items-center gap-4">
           <div className="w-11 h-11 bg-primary-500/10 rounded-xl flex items-center justify-center shrink-0">
             <Users className="w-5 h-5 text-primary-400" />
@@ -156,30 +123,6 @@ const Analytics = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Website Visitors</CardTitle>
-            <CardDescription>Total visits vs unique visitors</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {visitorTrend.length > 0 ? (
-              <AnalyticsChart
-                type="line"
-                data={visitorTrend}
-                categories={["total_visits", "unique_visitors"]}
-                height={350}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[350px] text-dark-500">
-                <Eye className="w-10 h-10 mb-3 opacity-20" />
-                <p className="text-sm text-dark-400">No visitor data yet</p>
-                <p className="text-xs mt-1 text-dark-600">
-                  Data appears once the tracker is live
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* Network Breakdown */}

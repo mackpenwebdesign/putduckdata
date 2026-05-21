@@ -5,16 +5,13 @@
  * In production, Vercel uses api/index.js directly (serverless).
  */
 
-// 1. Load environment variables immediately
-import "dotenv/config";
+// 1. Load environment variables from root .env (one level above backend/)
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { config as loadEnv } from "dotenv";
 
-// TEMP DEBUG - remove after fixing
-console.log(
-  "DATABASE_URL:",
-  process.env.DATABASE_URL
-    ? "✅ Loaded: " + process.env.DATABASE_URL.substring(0, 40) + "..."
-    : "❌ NOT LOADED - check your .env file"
-);
+const __serverDir = dirname(fileURLToPath(import.meta.url));
+loadEnv({ path: join(__serverDir, "../.env") });
 
 // 2. Import core modules
 import app from "./api/index.js";
