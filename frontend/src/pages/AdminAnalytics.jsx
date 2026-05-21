@@ -12,8 +12,6 @@ import {
   UserCheck,
   ChevronDown,
   Calendar,
-  Eye,
-  MousePointer,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import useAuthStore from "../stores/authStore";
@@ -395,9 +393,6 @@ const AdminAnalytics = () => {
   const platformStats = analytics.platform_stats || {};
   const revenueSummary = analytics.revenue?.summary || {};
   const totalRevenue = revenueSummary.total_revenue || 0;
-  const totalVisits = analytics.visitors?.total_visits ?? 0;
-  const uniqueVisitors = analytics.visitors?.unique_visitors ?? 0;
-  const visitorTrend = analytics.visitors?.daily ?? [];
 
   if (loading) return <AnalyticsSkeleton />;
 
@@ -409,9 +404,6 @@ const AdminAnalytics = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
             Analytics
           </h1>
-          <p className="text-dark-400 text-xs sm:text-sm mt-1">
-            Real-time metrics &amp; purchase data
-          </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <MobileDatePicker value={dateFilter} onChange={setDateFilter} />
@@ -427,49 +419,6 @@ const AdminAnalytics = () => {
         </div>
       </div>
 
-      {/* ── Visitor Stats ── */}
-      <div>
-        <p className="text-xs text-dark-500 uppercase tracking-widest font-semibold mb-3 px-0.5">
-          Website Traffic
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard
-            icon={Eye}
-            label="Total Visits"
-            value={totalVisits.toLocaleString()}
-            subtitle={`for ${dateFilter}`}
-            color="purple"
-          />
-          <StatCard
-            icon={MousePointer}
-            label="Unique Visitors"
-            value={uniqueVisitors.toLocaleString()}
-            subtitle={`for ${dateFilter}`}
-            color="cyan"
-          />
-          <StatCard
-            icon={Users}
-            label="Registered Users"
-            value={platformStats.total_users?.toLocaleString() || "0"}
-            subtitle="all time"
-            color="primary"
-          />
-          <StatCard
-            icon={UserCheck}
-            label="Returning Rate"
-            value={
-              totalVisits > 0 && uniqueVisitors > 0
-                ? `${(
-                    ((totalVisits - uniqueVisitors) / totalVisits) *
-                    100
-                  ).toFixed(1)}%`
-                : "—"
-            }
-            subtitle="visits from returning visitors"
-            color="orange"
-          />
-        </div>
-      </div>
 
       {/* ── Revenue / Purchase Stats ── */}
       <div>
@@ -528,29 +477,6 @@ const AdminAnalytics = () => {
             />
           ) : (
             <EmptyState message="No revenue data for this period" />
-          )}
-        </div>
-
-        {/* Visitor Trend */}
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-4 sm:p-6">
-          <SectionHead
-            icon={Eye}
-            iconCls="text-purple-400"
-            bgCls="bg-violet-500/15 border-violet-500/20"
-            title="Visitor Trend"
-          />
-          {visitorTrend.length > 0 ? (
-            <AnalyticsChart
-              type="line"
-              data={visitorTrend}
-              categories={["total_visits", "unique_visitors"]}
-              height={220}
-            />
-          ) : (
-            <EmptyState
-              icon={Eye}
-              message="No visitor data yet — deploy track-visit and visit the site"
-            />
           )}
         </div>
 

@@ -16,7 +16,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import api from "../utils/api";
-import { formatCurrency } from "../utils/formatters";
+import { formatCurrency, cleanPlanName } from "../utils/formatters";
 import { toast } from "react-hot-toast";
 
 const NETWORK_STYLE = {
@@ -225,7 +225,7 @@ const TrackOrder = () => {
               {order.plan_name && (
                 <div className="bg-dark-800/40 rounded-xl p-3">
                   <p className="text-dark-500 text-[10px] font-medium uppercase tracking-wide mb-1">Plan</p>
-                  <p className="text-white text-sm font-semibold">{order.plan_name}</p>
+                  <p className="text-white text-sm font-semibold">{cleanPlanName(order.plan_name)}</p>
                 </div>
               )}
               {order.data_volume && (

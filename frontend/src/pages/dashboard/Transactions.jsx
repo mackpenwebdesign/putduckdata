@@ -11,7 +11,7 @@ import Input from '../../components/Input';
 import Badge from '../../components/Badge';
 import EmptyState from '../../components/EmptyState';
 import api from '../../utils/api';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, cleanPlanName } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
 import { format } from 'date-fns';
 
@@ -624,7 +624,7 @@ const Transactions = () => {
                         {tx.metadata?.plan_name && (
                           <div className="flex justify-between sm:block">
                             <span className="text-dark-500 text-xs">Plan</span>
-                            <span className="text-white text-xs sm:block sm:mt-0.5">{tx.metadata.plan_name}</span>
+                            <span className="text-white text-xs sm:block sm:mt-0.5">{cleanPlanName(tx.metadata.plan_name)}</span>
                           </div>
                         )}
                         {tx.metadata?.data_volume && (

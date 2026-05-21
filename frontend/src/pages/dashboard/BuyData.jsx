@@ -14,7 +14,7 @@ import Button from "../../components/Button";
 import Input from "../../components/Input";
 import useAuthStore from "../../stores/authStore";
 import api from "../../utils/api";
-import { formatCurrency } from "../../utils/formatters";
+import { formatCurrency, cleanPlanName } from "../../utils/formatters";
 import { toast } from "react-hot-toast";
 
 const NETWORKS = [
@@ -166,7 +166,7 @@ const BuyData = () => {
           if (!Array.isArray(networkPlans)) continue;
           grouped[network] = networkPlans.map((plan) => ({
             id: plan.id,
-            name: plan.plan_name,
+            name: cleanPlanName(plan.plan_name),
             price: parseFloat(plan.price),
             validity: "90 days",
             data: plan.data_volume,

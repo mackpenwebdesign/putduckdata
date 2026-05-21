@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import Button from "../components/Button";
 import api from "../utils/api";
 import useThemeStore from "../stores/themeStore";
+import { cleanPlanName } from "../utils/formatters";
 
 const NETWORK_CONFIG = {
   MTN: {
@@ -1056,7 +1057,7 @@ const Landing = () => {
                             {plan.data_volume}
                           </h3>
                           <p className="text-dark-400 text-xs mb-3">
-                            {plan.plan_name} &middot; 90 days
+                            {cleanPlanName(plan.plan_name)} &middot; 90 days
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-white font-bold text-xl">

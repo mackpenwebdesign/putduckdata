@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "../../utils/api";
-import { formatCurrency } from "../../utils/formatters";
+import { formatCurrency, cleanPlanName } from "../../utils/formatters";
 
 const timeAgo = (d) => {
   const s = Math.floor((Date.now() - new Date(d)) / 1000);
@@ -382,7 +382,7 @@ const GlobalShopPricing = () => {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-xs font-semibold">
-                        {p.plan_name || p.data_volume}
+                        {cleanPlanName(p.plan_name) || p.data_volume}
                       </p>
                       <p className="text-dark-600 text-[10px] mt-0.5">
                         Retail: {formatCurrency(p.price)} · Provider cost:{" "}
@@ -569,7 +569,7 @@ const PartnerPricing = () => {
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-white text-xs font-semibold">
-                          {p.plan_name || p.data_volume}
+                          {cleanPlanName(p.plan_name) || p.data_volume}
                         </p>
                         <p className="text-dark-600 text-[10px] mt-0.5">
                           Platform: {formatCurrency(p.platform_price)}

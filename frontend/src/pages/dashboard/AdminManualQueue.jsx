@@ -8,9 +8,10 @@ import {
   RefreshCw,
   ClipboardList,
   Loader2,
+  Zap,
 } from 'lucide-react';
 import api from '../../utils/api';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, cleanPlanName } from '../../utils/formatters';
 import { toast } from 'react-hot-toast';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -37,6 +38,7 @@ const AdminManualQueue = () => {
   const [loading, setLoading] = useState(true);
   const [updatingTx, setUpdatingTx] = useState(null);
   const [copiedAll, setCopiedAll] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const fetchManualOrders = useCallback(async () => {
     setLoading(true);
@@ -69,6 +71,20 @@ const AdminManualQueue = () => {
     }
   };
 
+  const retryAll = async () => {
+    setRetrying(true);
+    try {
+      const res = await api.put('/admin-orders', { action: 'verify_pending_24h' });
+      const d = res.data || res;
+      toast.success(`Sent to 1Papi: ${d.placed ?? 0} placed, ${d.failed ?? 0} failed, ${d.skipped ?? 0} skipped`);
+      await fetchManualOrders();
+    } catch (err) {
+      toast.error(err?.message || 'Retry failed');
+    } finally {
+      setRetrying(false);
+    }
+  };
+
   const copyAllNumbers = () => {
     const numbers = orders.map(o => o.recipient_phone).filter(Boolean);
     if (!numbers.length) return;
@@ -96,7 +112,16 @@ const AdminManualQueue = () => {
             Orders awaiting manual fulfilment — send data via your provider portal, then mark each as done
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={retryAll}
+            disabled={retrying}
+            className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-xl bg-primary-600/10 border border-primary-600/30 text-primary-400 hover:bg-primary-600/20 transition-colors disabled:opacity-50"
+            title="Re-submit all pending orders from the last 24h to 1Papi. Run after syncing prices."
+          >
+            {retrying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+            {retrying ? 'Sending...' : 'Send All to 1Papi'}
+          </button>
           {orders.length > 0 && (
             <button
               onClick={copyAllNumbers}
@@ -146,7 +171,7 @@ const AdminManualQueue = () => {
                       {order.metadata?.network}
                     </span>
                     <span className="bg-dark-800 text-dark-400 px-2 py-0.5 rounded-full">
-                      {order.metadata?.plan_name}
+                      {cleanPlanName(order.metadata?.plan_name)}
                     </span>
                     <span className="text-green-400 font-semibold">{formatCurrency(order.amount)}</span>
                   </div>

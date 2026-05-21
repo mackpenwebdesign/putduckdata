@@ -6,9 +6,12 @@ import {
   ClipboardList,
   Loader2,
   Wallet,
+  Activity,
+  TrendingUp,
 } from "lucide-react";
 import Button from "../../components/Button";
 import api from "../../utils/api";
+import { formatCurrency } from "../../utils/formatters";
 import { toast } from "react-hot-toast";
 
 const AdminProvider = () => {
@@ -148,35 +151,72 @@ const AdminProvider = () => {
           )}
         </div>
 
-        {/* Balance + Sync buttons */}
-        <div className="border-t border-dark-700/50 pt-4 space-y-2">
-          <Button
-            onClick={handleCheckBalance}
-            loading={balanceLoading}
-            variant="secondary"
-            className="w-full justify-center"
-          >
-            <Wallet className="w-4 h-4 mr-2" />
-            {balanceLoading ? "Checking…" : "Check Balance"}
-          </Button>
-          {balance !== null && (
-            <p className="text-xs text-center text-green-400 font-medium">
-              {typeof balance === "object" ? JSON.stringify(balance) : String(balance)}
+        {/* Balance display */}
+        <div className="border-t border-dark-700/50 pt-4 space-y-3">
+          <div className="bg-dark-800/60 border border-dark-700/60 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-green-400" />
+                </div>
+                <span className="text-dark-400 text-xs font-medium uppercase tracking-wide">1Papi Balance</span>
+              </div>
+              <button
+                onClick={handleCheckBalance}
+                disabled={balanceLoading}
+                className="flex items-center gap-1.5 text-xs text-primary-400 hover:text-primary-300 disabled:opacity-50 transition-colors font-medium"
+              >
+                {balanceLoading
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <RefreshCw className="w-3.5 h-3.5" />}
+                {balanceLoading ? "Checking…" : "Refresh"}
+              </button>
+            </div>
+
+            {balance !== null ? (
+              <div>
+                <p className="text-2xl font-bold text-white">
+                  {(() => {
+                    const raw = typeof balance === "object" ? (balance.balance ?? balance.amount ?? null) : balance;
+                    const num = parseFloat(raw);
+                    return isNaN(num) ? String(raw) : formatCurrency(num);
+                  })()}
+                </p>
+                <p className="text-dark-500 text-xs mt-0.5 flex items-center gap-1">
+                  <Activity className="w-3 h-3" />
+                  Live balance from 1Papi
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-2xl font-bold text-dark-600">—</p>
+                <p className="text-dark-600 text-xs mt-0.5">Tap Refresh to fetch</p>
+              </div>
+            )}
+          </div>
+
+          {/* Sync button */}
+          <div className="bg-dark-800/40 border border-dark-700/40 rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 bg-primary-600/10 border border-primary-600/20 rounded-lg flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-primary-400" />
+              </div>
+              <span className="text-dark-400 text-xs font-medium uppercase tracking-wide">Price Sync</span>
+            </div>
+            <Button
+              onClick={handleSyncPrices}
+              loading={syncLoading}
+              className="w-full justify-center"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${syncLoading ? "animate-spin" : ""}`} />
+              {syncLoading ? "Syncing prices…" : "Sync Prices from 1Papi"}
+            </Button>
+            <p className="text-dark-600 text-xs mt-2 text-center">
+              {lastSynced
+                ? `Last synced: ${lastSynced.toLocaleTimeString()}`
+                : "Pulls live cost prices from 1Papi and updates your plan rates"}
             </p>
-          )}
-          <Button
-            onClick={handleSyncPrices}
-            loading={syncLoading}
-            className="w-full justify-center"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncLoading ? "animate-spin" : ""}`} />
-            {syncLoading ? "Syncing prices…" : "Sync Prices from 1Papi"}
-          </Button>
-          <p className="text-xs text-dark-500 mt-1 text-center">
-            {lastSynced
-              ? `Last synced: ${lastSynced.toLocaleTimeString()}`
-              : "Pulls live cost prices from 1Papi and updates your plan rates"}
-          </p>
+          </div>
         </div>
       </div>
 

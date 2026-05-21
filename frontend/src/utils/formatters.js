@@ -22,6 +22,18 @@ export const formatCurrency = (amount, compact = false) => {
 };
 
 /**
+ * Strips period-type suffixes from plan names (Monthly, Daily, Weekly, etc.)
+ * so they never appear in the UI regardless of what the DB contains.
+ */
+export const cleanPlanName = (name) => {
+  if (!name) return name;
+  return name
+    .replace(/\b(monthly|daily|weekly|yearly|annual|biweekly|fortnightly)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+};
+
+/**
  * Formats a date string or object into a readable format
  * Fixes the "missing export" error in AdminAnalytics.jsx
  */

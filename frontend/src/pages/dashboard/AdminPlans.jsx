@@ -20,6 +20,7 @@ import Badge from '../../components/Badge';
 import useAuthStore from '../../stores/authStore';
 import api from '../../utils/api';
 import { toast } from 'react-hot-toast';
+import { cleanPlanName } from '../../utils/formatters';
 
 const NETWORKS = ['MTN', 'TELECEL', 'AIRTEL_TIGO'];
 
@@ -39,7 +40,7 @@ const EMPTY_FORM = {
   network: 'MTN',
   plan_name: '',
   data_volume: '',
-  validity_days: '',
+  validity_days: '90',
   price: '',
   cost_price: '',
 };
@@ -165,7 +166,7 @@ const AdminPlans = () => {
   const handleSubmitPlan = async (e) => {
     e.preventDefault();
 
-    if (!formData.plan_name || !formData.data_volume || !formData.price || !formData.cost_price || !formData.validity_days) {
+    if (!formData.plan_name || !formData.data_volume || !formData.price || !formData.validity_days) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -180,7 +181,6 @@ const AdminPlans = () => {
           data_volume: formData.data_volume,
           validity_days: Number(formData.validity_days),
           price: Number(formData.price),
-          cost_price: Number(formData.cost_price),
         });
 
         const rd = response.data || response;
@@ -202,7 +202,6 @@ const AdminPlans = () => {
           data_volume: formData.data_volume,
           validity_days: Number(formData.validity_days),
           price: Number(formData.price),
-          cost_price: Number(formData.cost_price),
         });
 
         const rd = response.data || response;
@@ -232,7 +231,7 @@ const AdminPlans = () => {
       const response = await api.get('/auto-sync-plans');
       const d = response.data || response;
       toast.success(
-        `1Papi sync done: ${d.updated} plans updated, ${d.no_match ?? 0} unmatched`
+        `1Papi sync done: ${d.updated} plans updated, ${d.skipped ?? 0} unmatched`
       );
       await fetchPlans();
     } catch (error) {
@@ -492,7 +491,7 @@ const AdminPlans = () => {
 
               <Input
                 label="Plan Name"
-                placeholder="e.g. 5GB Monthly"
+                placeholder="e.g. MTN 5GB"
                 value={formData.plan_name}
                 onChange={(e) => setFormData({ ...formData, plan_name: e.target.value })}
                 required
@@ -509,7 +508,7 @@ const AdminPlans = () => {
                 <Input
                   label="Validity (days)"
                   type="number"
-                  placeholder="e.g. 30"
+                  placeholder="e.g. 90"
                   value={formData.validity_days}
                   onChange={(e) => setFormData({ ...formData, validity_days: e.target.value })}
                   required
@@ -528,19 +527,18 @@ const AdminPlans = () => {
                   min="0"
                   step="0.01"
                 />
-                <Input
-                  label="Cost Price (GH₵)"
-                  type="number"
-                  placeholder="0.00"
-                  value={formData.cost_price}
-                  onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                  required
-                  min="0"
-                  step="0.01"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-dark-500 mb-2">
+                    Cost Price (GH₵)
+                  </label>
+                  <div className="w-full bg-dark-800/40 border border-dark-700/50 rounded-lg px-4 py-2.5 text-dark-500 text-sm cursor-not-allowed select-none flex items-center justify-between">
+                    <span>{formData.cost_price ? `GH₵${Number(formData.cost_price).toFixed(2)}` : '—'}</span>
+                    <span className="text-xs text-dark-600">Set by 1Papi sync</span>
+                  </div>
+                </div>
               </div>
 
-              {formData.price && formData.cost_price && (
+              {formData.price && formData.cost_price && Number(formData.cost_price) > 0 && (
                 <div className="bg-dark-800/50 rounded-xl p-3 space-y-1">
                   <p className="text-dark-400 text-sm">
                     Profit per sale:{' '}
@@ -615,7 +613,7 @@ const PlanTable = ({ plans, onToggle, onDelete, onEdit, togglingId, deletingId }
             className="hover:bg-primary-600/5 transition-colors"
           >
             <td className="px-6 py-4">
-              <p className="text-white font-medium text-sm">{plan.plan_name}</p>
+              <p className="text-white font-medium text-sm">{cleanPlanName(plan.plan_name)}</p>
             </td>
             <td className="px-6 py-4">
               <Badge variant="primary" size="sm">{plan.data_volume}</Badge>
