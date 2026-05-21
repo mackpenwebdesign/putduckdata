@@ -27,10 +27,10 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const { full_name, phone_number, country, momo_phone } = body;
+    const { full_name, phone_number, country } = body;
 
     // Validate inputs
-    if (!full_name && !phone_number && !country && !momo_phone) {
+    if (!full_name && !phone_number && !country) {
       return errorResponse(400, 'At least one field must be provided for update');
     }
 
@@ -62,15 +62,6 @@ export const handler = async (event) => {
       }
       updates.push(`country = $${paramIndex}`);
       params.push(sanitizeInput(country.trim()));
-      paramIndex++;
-    }
-
-    if (momo_phone !== undefined) {
-      if (momo_phone && !/^0\d{9}$/.test(momo_phone)) {
-        return errorResponse(400, 'MoMo payout number must be 10 digits starting with 0');
-      }
-      updates.push(`momo_phone = $${paramIndex}`);
-      params.push(momo_phone ? momo_phone.trim() : null);
       paramIndex++;
     }
 

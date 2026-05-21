@@ -34,7 +34,6 @@ const Settings = () => {
   const [profileData, setProfileData] = useState({
     full_name: user?.full_name || '',
     phone_number: user?.phone_number || '',
-    momo_phone: user?.momo_phone || '',
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -54,7 +53,7 @@ const Settings = () => {
         toast.success('Profile updated successfully!');
       }
     } catch (error) {
-      toast.error(error.error || 'Failed to update profile');
+      toast.error(error.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -62,18 +61,13 @@ const Settings = () => {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    if (passwordData.new_password.length < 8) {
-      toast.error('New password must be at least 8 characters');
-      return;
-    }
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      toast.error('New passwords do not match');
-      return;
-    }
-    if (passwordData.current_password === passwordData.new_password) {
-      toast.error('New password must be different from current password');
-      return;
-    }
+    const p = passwordData.new_password;
+    if (p.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    if (!/[A-Z]/.test(p)) { toast.error('Password must contain at least one uppercase letter'); return; }
+    if (!/[a-z]/.test(p)) { toast.error('Password must contain at least one lowercase letter'); return; }
+    if (!/[0-9]/.test(p)) { toast.error('Password must contain at least one number'); return; }
+    if (p !== passwordData.confirm_password) { toast.error('Passwords do not match'); return; }
+    if (passwordData.current_password === p) { toast.error('New password must be different from current'); return; }
     setPasswordLoading(true);
     try {
       const response = await api.post('/password-change', {
@@ -85,7 +79,7 @@ const Settings = () => {
         setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
       }
     } catch (error) {
-      toast.error(error.error || 'Failed to change password');
+      toast.error(error.message || 'Failed to change password');
     } finally {
       setPasswordLoading(false);
     }
@@ -255,21 +249,6 @@ const Settings = () => {
               />
             </div>
           </div>
-          {user?.is_reseller && (
-            <div>
-              <label className="block text-sm font-medium text-dark-300 mb-1.5">
-                MoMo Payout Number
-                <span className="ml-2 text-[10px] font-normal text-dark-500">(for commission withdrawals)</span>
-              </label>
-              <Input
-                type="tel"
-                value={profileData.momo_phone}
-                onChange={(e) => setProfileData({ ...profileData, momo_phone: e.target.value.replace(/\D/g,'').slice(0,10) })}
-                placeholder="Your MoMo number (e.g. 0241234567)"
-                icon={Phone}
-              />
-            </div>
-          )}
           <div>
             <Button type="submit" loading={loading} size="sm" fullWidth>
               <Save className="w-3.5 h-3.5 mr-1.5" />
