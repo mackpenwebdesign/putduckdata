@@ -1,6 +1,6 @@
 ﻿import { WhatsappLogo } from "@phosphor-icons/react";
 
-const ADMIN_WA = "https://wa.me/233322291381";
+const ADMIN_WA = "https://wa.me/233558638899";
 const MESSAGE =
   "Hi PutDuckData team! I need help with my data purchase/order.";
 

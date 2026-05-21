@@ -209,6 +209,8 @@ export const handler = async (event) => {
         reference,
         JSON.stringify({
           guest: true,
+          // keep consistent naming for downstream delivery/sync flows
+          recipient_phone: phone_number,
           network,
           data_plan_id,
           phone_number,
@@ -244,7 +246,9 @@ export const handler = async (event) => {
         amount: Math.round(totalCharge * 100), // Paystack uses pesewas
         currency: "GHS",
         reference,
-        callback_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/payment/verify?guest=true`,
+        callback_url: `${
+          process.env.FRONTEND_URL || "https://putduckdata.com"
+        }/payment/verify?guest=true`,
         channels: ["mobile_money"],
         metadata: {
           guest: true,

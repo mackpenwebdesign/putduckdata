@@ -320,15 +320,38 @@ export const handler = async (event) => {
 
       // Only attempt delivery if we have the required fields
       if (!phoneNumber || !dataPlanId) {
-        console.warn(
-          "Guest delivery skipped — missing phone or plan:",
-          reference
+        console.warn("Guest delivery failed — missing phone or plan:", {
+          reference,
+          phoneNumber,
+          dataPlanId,
+        });
+
+        await executeQuery(
+          `UPDATE transactions
+           SET status = 'failed',
+               metadata = COALESCE(metadata, '{}'::jsonb) || $1::jsonb
+           WHERE reference = $2`,
+          [
+            JSON.stringify({
+              delivery_failed: true,
+              reason: "missing_phone_or_plan",
+              delivery_attempted: true,
+              refund_eligible: true,
+              needs_manual_refund: true,
+              provider_plan_resolved: false,
+              provider_plan_id_used: null,
+              phone_number_used: phoneNumber || null,
+              data_plan_id_used: dataPlanId || null,
+            }),
+            reference,
+          ]
         );
+
         return successResponse(200, {
           status: "success",
-          message: "Payment verified successfully",
-          delivery_status: "pending",
-          delivery_error: null,
+          message: "Payment verified, but delivery could not start.",
+          delivery_status: "failed",
+          delivery_error: "Missing phone number or data plan.",
           amount: parseFloat(transaction.amount),
           network: meta.network || null,
           plan_name: meta.plan_name || null,
@@ -350,34 +373,59 @@ export const handler = async (event) => {
           providerPlanId = planRows[0]?.provider_plan_id;
         }
 
+        console.log("[Guest Delivery] Resolving provider plan", {
+          reference,
+          dataPlanId,
+          metaProviderPlanId: meta.provider_plan_id,
+          resolvedProviderPlanId: providerPlanId,
+          phoneNumber,
+        });
+
         if (!providerPlanId) {
+          // Payment confirmed — plan not mapped yet, queue for manual fulfil
           await executeQuery(
-            `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
+            `UPDATE transactions
+             SET metadata = COALESCE(metadata, '{}'::jsonb) || $1::jsonb
+             WHERE reference = $2`,
             [
               JSON.stringify({
-                delivery_failed: true,
+                needs_manual_fulfil: true,
                 reason: "no_provider_plan_id",
                 delivery_attempted: true,
-                refund_eligible: true,
-                needs_manual_refund: true,
               }),
               reference,
             ]
           );
           await notifyAdmins(
             NotificationType.ADMIN_ALERT,
-            "Guest Order Failed — No Provider Plan ID",
-            `Reference: ${reference} | Metadata missing provider_plan_id. Manual refund required.`
+            "Guest Order — Manual Fulfil Required",
+            `Reference: ${reference} | data_plan_id=${dataPlanId} | No provider_plan_id mapped. Manual delivery needed.`
           );
-          deliveryStatus = "failed";
-          deliveryError =
-            "Data plan configuration error. Please contact support for a refund.";
-          console.error(
-            "Guest delivery failed — no provider_plan_id:",
+          deliveryStatus = "processing";
+          deliveryError = null;
+          console.warn(
+            "Guest delivery — no provider_plan_id, queued for manual:",
             reference
           );
         } else {
-          const result = await buyData(phoneNumber, providerPlanId);
+          console.log("[Guest Delivery] Calling buyData", {
+            reference,
+            phoneNumber,
+            providerPlanId,
+            dataPlanId,
+          });
+
+          const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
+          const result = await buyData(phoneNumber, providerPlanId, onepapiWebhookUrl);
+
+          console.log("[Guest Delivery] buyData result", {
+            reference,
+            success: result?.success,
+            status: result?.status,
+            providerReference:
+              result?.reference || result?.provider_reference || null,
+            message: result?.message || null,
+          });
 
           if (result.success && result.status !== "failed") {
             await executeQuery(
@@ -396,38 +444,38 @@ export const handler = async (event) => {
               result.status === "completed" ? "completed" : "processing";
             console.log(`1Papi guest delivery ${result.status}:`, reference);
           } else {
+            // Payment confirmed — 1Papi rejected. Keep status='success', queue for manual fulfil.
             await executeQuery(
-              `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
+              `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
               [
                 JSON.stringify({
                   delivery_failed: true,
                   provider: "1papi",
                   provider_error: result.message,
                   delivery_attempted: true,
-                  refund_eligible: true,
-                  needs_manual_refund: true,
+                  needs_manual_fulfil: true,
                 }),
                 reference,
               ]
             );
             await notifyAdmins(
               NotificationType.ADMIN_ALERT,
-              "Guest Order Failed — Refund Needed",
+              "Guest Order — Provider Rejected, Manual Fulfil Needed",
               `Reference: ${reference} | Provider: 1Papi | Error: "${result.message}"`
             );
             deliveryStatus = "failed";
             deliveryError = result.message;
             console.warn(
-              "1Papi guest delivery rejected:",
+              "1Papi guest delivery rejected (payment confirmed):",
               reference,
               result.message
             );
           }
         }
       } catch (deliveryErr) {
-        // Unexpected delivery error — mark failed, flag for refund
+        // Unexpected exception — payment IS confirmed, keep status='success'.
         console.error(
-          "Guest delivery exception:",
+          "Guest delivery exception (payment confirmed):",
           reference,
           deliveryErr.message
         );
@@ -435,13 +483,12 @@ export const handler = async (event) => {
         deliveryError = "Delivery error. Please contact support.";
         try {
           await executeQuery(
-            `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
+            `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
             [
               JSON.stringify({
                 delivery_error: deliveryErr.message,
                 delivery_attempted: true,
-                refund_eligible: true,
-                needs_manual_refund: true,
+                needs_manual_fulfil: true,
               }),
               reference,
             ]

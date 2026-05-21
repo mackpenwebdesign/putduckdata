@@ -234,7 +234,8 @@ export const handler = async (event) => {
             const providerPlanId = planRows[0]?.provider_plan_id;
 
             if (providerPlanId) {
-              const result = await buyData(phoneNumber, providerPlanId);
+              const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
+              const result = await buyData(phoneNumber, providerPlanId, onepapiWebhookUrl);
               if (result.success && result.status !== "failed") {
                 const deliveryStatus = result.status === "completed" ? "completed" : "processing";
                 await executeQuery(
@@ -253,8 +254,7 @@ export const handler = async (event) => {
                 console.log(`1Papi guest data delivery ${deliveryStatus}:`, reference);
               } else {
                 // 1Papi rejected — payment IS confirmed, but delivery failed.
-                // Keep status='success' so guest isn't shown "Payment Failed".
-                // Flag needs_manual_refund so admin can issue Paystack refund.
+                // Queue for manual fulfil so admin can retry or refund.
                 await executeQuery(
                   `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
                   [
@@ -262,7 +262,7 @@ export const handler = async (event) => {
                       delivery_failed: true,
                       provider: "1papi",
                       provider_error: result.message,
-                      needs_manual_refund: true,
+                      needs_manual_fulfil: true,
                       delivery_attempted: true,
                     }),
                     reference,
@@ -297,7 +297,7 @@ export const handler = async (event) => {
             [
               JSON.stringify({
                 delivery_error: deliveryErr.message,
-                needs_manual_refund: true,
+                needs_manual_fulfil: true,
                 delivery_attempted: true,
               }),
               reference,

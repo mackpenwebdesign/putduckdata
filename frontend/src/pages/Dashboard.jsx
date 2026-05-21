@@ -697,7 +697,7 @@ const Dashboard = () => {
 
               {/* Help */}
               <a
-                href="https://wa.me/233322291381?text=Hi%20PutDuckData%20team%2C%20I%20need%20help"
+                href="https://wa.me/233558638899?text=Hi%20PutDuckData%20team%2C%20I%20need%20help"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[12px] text-dark-500 hover:bg-dark-800/50 hover:text-dark-300 transition-colors"

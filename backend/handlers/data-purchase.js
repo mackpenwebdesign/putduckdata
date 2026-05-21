@@ -317,7 +317,8 @@ export const handler = async (event) => {
       // ─── 1Papi provider ──────────────────────────────────────────────────
       if (plan.provider_plan_id) {
         try {
-          const providerResult = await buyData(phone_number, plan.provider_plan_id);
+          const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
+          const providerResult = await buyData(phone_number, plan.provider_plan_id, onepapiWebhookUrl);
           providerRef = providerResult.reference || null;
 
           if (providerResult.success && providerResult.status !== "failed") {

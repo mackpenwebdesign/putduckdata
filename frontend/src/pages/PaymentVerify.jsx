@@ -435,7 +435,7 @@ const PaymentVerify = () => {
                   </a>
                 </div>
                 <a
-                  href="https://wa.me/0558638899"
+                  href="https://wa.me/233558638899"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary-400 font-semibold"

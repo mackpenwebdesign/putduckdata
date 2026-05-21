@@ -63,6 +63,7 @@ const TrackOrder = () => {
   const [loading, setLoading] = useState(false);
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (searchParams.get("ref")) handleTrack();
@@ -83,6 +84,25 @@ const TrackOrder = () => {
       setError(err?.message || "Order not found. Check your reference number.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckStatus = async () => {
+    if (!order?.reference || checking) return;
+    setChecking(true);
+    try {
+      const res = await api.post("/guest-order-status-check", { reference: order.reference });
+      const d = res.data || res;
+      if (d.changed) {
+        toast.success("Order status updated!");
+        await handleTrack();
+      } else {
+        toast("No change yet — order is still being processed.", { icon: "⏳" });
+      }
+    } catch {
+      toast.error("Could not check status. Please try again.");
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -264,21 +284,36 @@ const TrackOrder = () => {
             </div>
 
             {/* Actions */}
-            <div className="px-5 pb-5 flex gap-2.5">
-              <a
-                href="https://wa.me/233558638899?text=Hi%2C+I+need+help+with+my+order"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 text-center py-2.5 rounded-xl border border-dark-700 text-dark-300 text-sm hover:bg-dark-800/50 hover:text-white transition-colors"
-              >
-                Need Help?
-              </a>
-              <button
-                onClick={() => { setOrder(null); setReference(""); }}
-                className="flex-1 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-colors"
-              >
-                Track Another
-              </button>
+            <div className="px-5 pb-5 space-y-2.5">
+              {/* Check Status — only for active (non-terminal) orders */}
+              {!isFailed && order.status !== "completed" && (
+                <button
+                  onClick={handleCheckStatus}
+                  disabled={checking || loading}
+                  className="w-full py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white text-sm font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {checking
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking with provider…</>
+                    : <><RefreshCw className="w-4 h-4" /> Check Status</>
+                  }
+                </button>
+              )}
+              <div className="flex gap-2.5">
+                <a
+                  href="https://wa.me/233558638899?text=Hi%2C+I+need+help+with+my+order"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 text-center py-2.5 rounded-xl border border-dark-700 text-dark-300 text-sm hover:bg-dark-800/50 hover:text-white transition-colors"
+                >
+                  Need Help?
+                </a>
+                <button
+                  onClick={() => { setOrder(null); setReference(""); }}
+                  className="flex-1 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-colors"
+                >
+                  Track Another
+                </button>
+              </div>
             </div>
           </div>
         )}

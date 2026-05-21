@@ -157,7 +157,7 @@ const GuestLayout = ({ children }) => {
             <div className="flex-shrink-0 border-t border-dark-800/40 px-2.5 py-2 space-y-0.5">
               {/* FIXED: Added missing <a> opening tag below */}
               <a
-                href="https://wa.me/233322291381?text=Hi%2C+I+need+help+with+my+order"
+                href="https://wa.me/233558638899?text=Hi%2C+I+need+help+with+my+order"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12px] text-dark-500 hover:bg-dark-800/50 hover:text-dark-300 transition-colors"

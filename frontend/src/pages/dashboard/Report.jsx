@@ -65,7 +65,7 @@ const Report = () => {
       }%0A*Details:* ${form.message}${
         form.transaction_ref ? `%0A*Ref:* ${form.transaction_ref}` : ""
       }%0A%0A*User:* ${user?.full_name} (${user?.email})`;
-      window.open(`https://wa.me/233322291381?text=${msg}`, "_blank");
+      window.open(`https://wa.me/233558638899?text=${msg}`, "_blank");
       setSubmitted(true);
       toast.success("Opening WhatsApp to submit your report...");
     } finally {
@@ -124,7 +124,7 @@ const Report = () => {
       {/* Quick Contact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <a
-          href="https://wa.me/233322291381?text=Hi%20PutDuckData%20team%2C%20I%20need%20help"
+          href="https://wa.me/233558638899?text=Hi%20PutDuckData%20team%2C%20I%20need%20help"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-3 bg-green-600/10 border border-green-600/20 rounded-xl px-4 py-3 hover:border-green-600/40 transition-colors"
