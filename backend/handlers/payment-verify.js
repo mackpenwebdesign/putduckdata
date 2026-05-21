@@ -43,18 +43,6 @@ async function notifyAdmins(type, title, message) {
   }
 }
 
-// Returns true when a 1Papi error message indicates an account balance problem.
-const isProviderBalanceError = (msg = "") => {
-  const m = msg.toLowerCase();
-  return (
-    m.includes("insufficient") ||
-    m.includes("balance") ||
-    m.includes("low fund") ||
-    m.includes("not enough") ||
-    m.includes("top up")
-  );
-};
-
 // ─── Helper: Verify reference with Paystack ───────────────────────────────────
 async function verifyWithPaystack(reference) {
   const response = await axios.get(
@@ -384,28 +372,6 @@ export const handler = async (event) => {
             );
             deliveryStatus = result.status === "completed" ? "completed" : "processing";
             console.log(`1Papi guest delivery ${result.status}:`, reference);
-          } else if (isProviderBalanceError(result.message)) {
-            // Provider has insufficient balance — keep payment as success, queue for manual delivery.
-            // Intentionally NOT setting delivery_attempted so the admin retry can re-try via 1Papi.
-            await executeQuery(
-              `UPDATE transactions SET status = 'success', metadata = metadata || $1::jsonb WHERE reference = $2`,
-              [
-                JSON.stringify({
-                  provider: "1papi",
-                  provider_error: result.message,
-                  needs_manual_fulfil: true,
-                  manual_reason: "provider_low_balance",
-                }),
-                reference,
-              ]
-            );
-            await notifyAdmins(
-              NotificationType.ADMIN_ALERT,
-              "Guest Order Queued — Provider Low Balance",
-              `Reference: ${reference} | Error: "${result.message}" | Needs manual delivery.`
-            );
-            deliveryStatus = "processing";
-            console.warn("1Papi low balance — guest order queued manual:", reference, result.message);
           } else {
             await executeQuery(
               `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,

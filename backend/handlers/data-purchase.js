@@ -23,18 +23,6 @@ import {
   isBodySizeValid,
 } from "../utils/security-middleware.js";
 
-// Returns true when the provider error message indicates an account balance problem.
-// These orders should be queued for manual fulfilment rather than auto-refunded.
-const isProviderBalanceError = (msg = "") => {
-  const m = msg.toLowerCase();
-  return (
-    m.includes("insufficient") ||
-    m.includes("balance") ||
-    m.includes("low fund") ||
-    m.includes("not enough") ||
-    m.includes("top up")
-  );
-};
 
 /**
  * ============================================================
@@ -367,47 +355,26 @@ export const handler = async (event) => {
         } catch (apiError) {
           if (apiError.message?.startsWith("PROVIDER_FAIL:")) {
             const providerErrMsg = apiError.message.replace("PROVIDER_FAIL:", "");
-            if (isProviderBalanceError(providerErrMsg)) {
-              // Provider has insufficient balance — queue for manual fulfilment, do NOT refund yet
-              finalStatus = "processing";
-              console.warn("Provider balance low, queuing for manual:", reference, providerErrMsg);
-              await sql(
-                `UPDATE transactions SET
-                   status = 'processing',
-                   metadata = metadata || $1::jsonb,
-                   updated_at = CURRENT_TIMESTAMP
-                 WHERE id = $2`,
-                [
-                  JSON.stringify({
-                    provider_error: providerErrMsg,
-                    needs_manual_fulfil: true,
-                    manual_reason: "provider_low_balance",
-                  }),
-                  transactionId,
-                ]
-              );
-            } else {
-              finalStatus = "failed";
-              await sql(
-                "UPDATE users SET wallet_balance = wallet_balance + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-                [sellingPrice, auth.user.id]
-              );
-              await sql(
-                `UPDATE transactions SET
-                   status = 'failed',
-                   metadata = metadata || $1::jsonb,
-                   updated_at = CURRENT_TIMESTAMP
-                 WHERE id = $2`,
-                [
-                  JSON.stringify({
-                    provider_error: providerErrMsg,
-                    auto_refunded: true,
-                    refund_amount: sellingPrice,
-                  }),
-                  transactionId,
-                ]
-              );
-            }
+            finalStatus = "failed";
+            await sql(
+              "UPDATE users SET wallet_balance = wallet_balance + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+              [sellingPrice, auth.user.id]
+            );
+            await sql(
+              `UPDATE transactions SET
+                 status = 'failed',
+                 metadata = metadata || $1::jsonb,
+                 updated_at = CURRENT_TIMESTAMP
+               WHERE id = $2`,
+              [
+                JSON.stringify({
+                  provider_error: providerErrMsg,
+                  auto_refunded: true,
+                  refund_amount: sellingPrice,
+                }),
+                transactionId,
+              ]
+            );
           } else if (apiError.code === "ONEPAPI_RATE_LIMIT") {
             finalStatus = "processing";
             console.warn("1Papi rate limit hit for tx:", reference);

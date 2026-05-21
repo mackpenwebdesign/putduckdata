@@ -12,15 +12,19 @@ import {
 } from "../utils/notifications.js";
 import { buyData } from "../utils/onepapi.js";
 
-// Returns true when a 1Papi error message indicates an account balance problem.
+// Returns true ONLY when the provider error is specifically about account balance.
+// Must require exact phrases to avoid false positives on unrelated errors
+// (e.g. "insufficient data plan", "invalid plan", etc.).
 const isProviderBalanceError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
-    m.includes("insufficient") ||
-    m.includes("balance") ||
-    m.includes("low fund") ||
-    m.includes("not enough") ||
-    m.includes("top up")
+    m.includes("insufficient balance") ||
+    m.includes("insufficient fund") ||
+    m.includes("low balance") ||
+    m.includes("not enough balance") ||
+    m.includes("account balance") ||
+    m.includes("top up your") ||
+    m.includes("recharge your")
   );
 };
 

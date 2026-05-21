@@ -252,22 +252,24 @@ export const handler = async (event) => {
                 );
                 console.log(`1Papi guest data delivery ${deliveryStatus}:`, reference);
               } else {
+                // 1Papi rejected the order — mark failed so admin can refund from Paystack
                 await executeQuery(
-                  `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
+                  `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
                   [
                     JSON.stringify({
                       delivery_failed: true,
                       provider: "1papi",
                       provider_error: result.message,
-                      needs_manual_fulfil: true,
+                      needs_manual_refund: true,
                       delivery_attempted: true,
                     }),
                     reference,
                   ]
                 );
-                console.warn("1Papi guest delivery failed, queued manual:", reference);
+                console.warn("1Papi guest delivery rejected (webhook):", reference, result.message);
               }
             } else {
+              // No provider_plan_id — plan not synced, queue for manual delivery
               await executeQuery(
                 `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
                 [
@@ -286,13 +288,13 @@ export const handler = async (event) => {
             "Guest delivery error (payment already confirmed):",
             deliveryErr.message
           );
-          // Don't fail the webhook — payment was confirmed, mark as needing manual fulfil
+          // Unexpected exception — mark failed, admin can refund from Paystack
           await executeQuery(
-            `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
+            `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
             [
               JSON.stringify({
                 delivery_error: deliveryErr.message,
-                needs_manual_fulfil: true,
+                needs_manual_refund: true,
                 delivery_attempted: true,
               }),
               reference,

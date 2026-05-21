@@ -61,9 +61,12 @@ export const handler = async (event) => {
       failed: "This order failed. Please contact support for a refund.",
     };
 
-    // Enhanced message for failed orders based on reason in metadata
     let enhancedMessage = statusMessages[tx.status] || "Order status updated.";
-    if (tx.status === "failed") {
+
+    // Manual fulfilment: payment confirmed, delivery being handled by team
+    if (meta.needs_manual_fulfil && tx.status !== "failed") {
+      enhancedMessage = "Payment confirmed. Your data bundle is being prepared — it will be delivered to your number shortly.";
+    } else if (tx.status === "failed") {
       const failureReason = meta.delivery_failed
         ? "Delivery failed"
         : meta.needs_manual_refund
