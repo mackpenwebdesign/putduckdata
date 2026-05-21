@@ -93,27 +93,27 @@ const PlanCard = ({ plan, network, nc, onSelect }) => (
     className={`group relative w-full text-left bg-dark-900/80 border ${nc.border} rounded-2xl overflow-hidden hover:${nc.activeBorder} hover:shadow-xl ${nc.glow} transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0`}
   >
     {/* Top colour band */}
-    <div className={`bg-gradient-to-br ${nc.gradient} px-4 pt-5 pb-4`}>
-      <span className={`text-4xl font-black ${nc.accent} leading-none tracking-tight`}>
+    <div className={`bg-gradient-to-br ${nc.gradient} px-3 pt-4 pb-3 sm:px-4 sm:pt-5 sm:pb-4`}>
+      <span className={`text-2xl sm:text-4xl font-black ${nc.accent} leading-none tracking-tight`}>
         {plan.data}
       </span>
-      <p className="text-dark-500 text-[11px] mt-1 font-medium">{plan.validity}</p>
+      <p className="text-dark-500 text-[10px] mt-1 font-medium">{plan.validity}</p>
     </div>
 
     {/* Bottom section */}
-    <div className="px-4 pb-4 pt-3 border-t border-dark-800/60">
-      <p className="text-white/90 text-xs font-medium leading-snug mb-3 line-clamp-1">{plan.name}</p>
+    <div className="px-3 pb-3 pt-2 sm:px-4 sm:pb-4 sm:pt-3 border-t border-dark-800/60">
+      <p className="text-white/90 text-[10px] sm:text-xs font-medium leading-snug mb-2 sm:mb-3 line-clamp-1">{plan.name}</p>
       <div className="flex items-center justify-between">
-        <p className={`text-xl font-black ${nc.price}`}>{formatCurrency(plan.price)}</p>
-        <div className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg ${nc.btn} opacity-0 group-hover:opacity-100 transition-opacity`}>
+        <p className={`text-base sm:text-xl font-black ${nc.price}`}>{formatCurrency(plan.price)}</p>
+        <div className={`hidden sm:flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg ${nc.btn} opacity-0 group-hover:opacity-100 transition-opacity`}>
           Buy <ArrowRight className="w-3 h-3" />
         </div>
       </div>
     </div>
 
     {/* Subtle arrow indicator always visible */}
-    <div className={`absolute top-3 right-3 w-6 h-6 rounded-full ${nc.dataBg} flex items-center justify-center`}>
-      <ArrowRight className={`w-3 h-3 ${nc.accent}`} />
+    <div className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-5 h-5 sm:w-6 sm:h-6 rounded-full ${nc.dataBg} flex items-center justify-center`}>
+      <ArrowRight className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${nc.accent}`} />
     </div>
   </button>
 );
@@ -308,7 +308,7 @@ const BuyPage = () => {
 
         {/* Plan grid */}
         {fetchingPlans ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : activePlans.length === 0 ? (
@@ -317,7 +317,7 @@ const BuyPage = () => {
             <p className="text-dark-400 text-sm">No plans available for {activeNetwork?.name}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {activePlans.map((plan) => (
               <PlanCard key={plan.id} plan={plan} network={activeNetwork} nc={tabNc} onSelect={handleSelectPlan} />
             ))}
