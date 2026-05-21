@@ -282,6 +282,28 @@ function App() {
     }
   }, [maintenance, user, isPaymentVerifyPage]);
 
+  // Swipe-to-dismiss toasts
+  useEffect(() => {
+    let startY = 0;
+    let toastEl = null;
+    const onStart = (e) => {
+      toastEl = e.target.closest('[class*="go"]');
+      if (toastEl) startY = e.touches[0].clientY;
+    };
+    const onEnd = (e) => {
+      if (!toastEl) return;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dy) > 40) toast.dismiss();
+      toastEl = null;
+    };
+    document.addEventListener("touchstart", onStart, { passive: true });
+    document.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onStart);
+      document.removeEventListener("touchend", onEnd);
+    };
+  }, []);
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -292,7 +314,7 @@ function App() {
     position: "top-center",
     containerStyle: { top: 16, left: 8, right: 8 },
     toastOptions: {
-      duration: maintenance ? 6000 : 4000,
+      duration: maintenance ? 5000 : 2500,
       style: {
         background: "#1e293b",
         color: "#fff",
@@ -300,6 +322,8 @@ function App() {
         maxWidth: "min(420px, calc(100vw - 1rem))",
         fontSize: "0.875rem",
         wordBreak: "break-word",
+        cursor: "pointer",
+        touchAction: "pan-y",
       },
       success: { iconTheme: { primary: "#dc2626", secondary: "#fff" } },
       error: { iconTheme: { primary: "#ef4444", secondary: "#fff" } },
@@ -310,7 +334,10 @@ function App() {
     <BrowserRouter
       future={{ v7_relativeSplatPath: true, v7_startTransition: true }}
     >
-      <Toaster {...toasterProps} />
+      <Toaster
+        {...toasterProps}
+        containerClassName="toast-swipe-container"
+      />
       <AppRoutes
         maintenance={maintenance && !user?.is_admin ? maintenance : null}
         adminPath={adminPath}

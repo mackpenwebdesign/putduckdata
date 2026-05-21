@@ -182,21 +182,6 @@ export const handler = async (event) => {
       }
     }
 
-    // SECURITY FIX #2: Price floor/ceiling validation
-    // Price must be >= cost_price (minimum we need to pay provider)
-    const minPrice = parseFloat(plan.cost_price) * 0.9; // Allow 10% tolerance
-    const maxPrice = parseFloat(plan.price) * 3; // Cap at 3x to prevent abuse
-
-    if (sellingPrice < minPrice) {
-      console.error("Price below minimum:", { sellingPrice, minPrice });
-      return errorResponse(400, "Invalid plan price");
-    }
-
-    if (sellingPrice > maxPrice) {
-      console.error("Price above maximum:", { sellingPrice, maxPrice });
-      return errorResponse(400, "Invalid plan price");
-    }
-
     const fee = calculatePaystackFee(sellingPrice);
     const totalCharge = Math.round((sellingPrice + fee) * 100) / 100;
 

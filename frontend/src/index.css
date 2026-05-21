@@ -27,6 +27,13 @@
   --brand-faint: #fee2e2;
 }
 
+/* ─── Toast swipe-to-dismiss ───────────────────────────────────────────────── */
+.toast-swipe-container > div > div {
+  touch-action: pan-y;
+  user-select: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
 * {
   margin: 0;
   padding: 0;
