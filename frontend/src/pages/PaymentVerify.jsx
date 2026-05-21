@@ -424,15 +424,25 @@ const PaymentVerify = () => {
                 </div>
               </div>
 
-              <p className="text-dark-500 text-xs mt-4">
-                Still stuck? Call support:{" "}
+              <div className="text-dark-500 text-xs mt-4 flex flex-col gap-2">
+                <div>
+                  Still stuck? Call support:{" "}
+                  <a
+                    href="tel:0558638899"
+                    className="text-primary-400 font-semibold"
+                  >
+                    0558638899
+                  </a>
+                </div>
                 <a
-                  href="tel:0558638899"
+                  href="https://wa.me/0558638899"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="text-primary-400 font-semibold"
                 >
-                  0558638899
+                  WhatsApp support
                 </a>
-              </p>
+              </div>
             </>
           )}
 

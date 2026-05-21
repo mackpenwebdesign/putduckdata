@@ -194,10 +194,15 @@ export const handler = async (event) => {
       // ── Pending: MoMo prompt not yet completed — leave DB as-is, don't mark failed ──
       // Webhook will fire charge.success when user completes the MoMo prompt.
       if (paymentData.status === "pending") {
-        console.log("Payment pending for reference:", reference, "- leaving DB unchanged");
+        console.log(
+          "Payment pending for reference:",
+          reference,
+          "- leaving DB unchanged"
+        );
         return successResponse(200, {
           status: "pending",
-          message: "Payment is still pending. Please complete the MoMo prompt on your phone then tap Check Again.",
+          message:
+            "Payment is still pending. Please complete the MoMo prompt on your phone then tap Check Again.",
           reference,
         });
       }
@@ -288,10 +293,14 @@ export const handler = async (event) => {
 
       if (deliveryClaimed.length === 0) {
         // Webhook already claimed delivery or already attempted — don't double-deliver
-        console.log("Verify: delivery already locked or attempted for:", reference);
+        console.log(
+          "Verify: delivery already locked or attempted for:",
+          reference
+        );
         return successResponse(200, {
           status: "success",
-          message: "Payment verified successfully. Data delivery is in progress.",
+          message:
+            "Payment verified successfully. Data delivery is in progress.",
           delivery_status: "processing",
           delivery_error: null,
           amount: parseFloat(transaction.amount),
@@ -330,7 +339,16 @@ export const handler = async (event) => {
 
       try {
         // ── 1Papi delivery ────────────────────────────────────────────────
-        const providerPlanId = meta.provider_plan_id;
+        // Some guest flows rely on metadata->provider_plan_id, but that can be missing.
+        // Resolve provider_plan_id from data_plans when needed.
+        let providerPlanId = meta.provider_plan_id;
+        if (!providerPlanId && dataPlanId) {
+          const planRows = await executeQuery(
+            "SELECT provider_plan_id FROM data_plans WHERE id = $1 AND is_active = true LIMIT 1",
+            [dataPlanId]
+          );
+          providerPlanId = planRows[0]?.provider_plan_id;
+        }
 
         if (!providerPlanId) {
           await executeQuery(
@@ -352,8 +370,12 @@ export const handler = async (event) => {
             `Reference: ${reference} | Metadata missing provider_plan_id. Manual refund required.`
           );
           deliveryStatus = "failed";
-          deliveryError = "Data plan configuration error. Please contact support for a refund.";
-          console.error("Guest delivery failed — no provider_plan_id in metadata:", reference);
+          deliveryError =
+            "Data plan configuration error. Please contact support for a refund.";
+          console.error(
+            "Guest delivery failed — no provider_plan_id:",
+            reference
+          );
         } else {
           const result = await buyData(phoneNumber, providerPlanId);
 
@@ -370,7 +392,8 @@ export const handler = async (event) => {
                 reference,
               ]
             );
-            deliveryStatus = result.status === "completed" ? "completed" : "processing";
+            deliveryStatus =
+              result.status === "completed" ? "completed" : "processing";
             console.log(`1Papi guest delivery ${result.status}:`, reference);
           } else {
             await executeQuery(
@@ -394,7 +417,11 @@ export const handler = async (event) => {
             );
             deliveryStatus = "failed";
             deliveryError = result.message;
-            console.warn("1Papi guest delivery rejected:", reference, result.message);
+            console.warn(
+              "1Papi guest delivery rejected:",
+              reference,
+              result.message
+            );
           }
         }
       } catch (deliveryErr) {
@@ -517,10 +544,15 @@ export const handler = async (event) => {
 
     // Pending: MoMo not yet confirmed — leave DB unchanged, webhook will handle success
     if (paymentData.status === "pending") {
-      console.log("Payment pending for reference:", reference, "- leaving DB unchanged");
+      console.log(
+        "Payment pending for reference:",
+        reference,
+        "- leaving DB unchanged"
+      );
       return successResponse(200, {
         status: "pending",
-        message: "Payment is still pending. Please complete the MoMo prompt on your phone then tap Check Again.",
+        message:
+          "Payment is still pending. Please complete the MoMo prompt on your phone then tap Check Again.",
         reference,
       });
     }
