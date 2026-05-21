@@ -1481,10 +1481,10 @@ const Landing = () => {
                   </li>
                   <li>
                     <a
-                      href="tel:0322291381"
+                      href="tel:0558638899"
                       className="text-dark-400 hover:text-primary-600 text-sm transition-colors"
                     >
-                      0322291381
+                      0558638899
                     </a>
                   </li>
                   <li>
@@ -1526,7 +1526,8 @@ const Landing = () => {
             </div>
             <div className="mt-4 text-center">
               <p className="text-dark-600 text-xs">
-                &copy; {new Date().getFullYear()} PutDuckData. All rights reserved.
+                &copy; {new Date().getFullYear()} PutDuckData. All rights
+                reserved.
               </p>
             </div>
           </div>

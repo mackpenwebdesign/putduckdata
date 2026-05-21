@@ -1,6 +1,12 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { CheckCircle, XCircle, Loader2, Download } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Download,
+  RefreshCw,
+} from "lucide-react";
 import Button from "../components/Button";
 import useAuthStore from "../stores/authStore";
 import api from "../utils/api";
@@ -23,13 +29,13 @@ const PaymentVerify = () => {
   const [countdown, setCountdown] = useState(null);
   const [authReady, setAuthReady] = useState(false);
 
-  // Give the auth store a moment to rehydrate from localStorage before checking token
+  // ─── Give the auth store a moment to rehydrate from localStorage ───────────
   useEffect(() => {
     const t = setTimeout(() => setAuthReady(true), 200);
     return () => clearTimeout(t);
   }, []);
 
-  // Auto-redirect after success
+  // ─── Auto-redirect after success (authenticated users only) ────────────────
   useEffect(() => {
     if (status !== "success" || isGuest) return;
     const dest = isAfa ? "/dashboard/afa/form" : "/dashboard/wallet";
@@ -47,8 +53,54 @@ const PaymentVerify = () => {
     return () => clearInterval(interval);
   }, [status, isGuest, isAfa, navigate]);
 
+  // ─── Shared helper: resolve a raw error to a human-readable string ─────────
+  const resolveErrMsg = (err) =>
+    err?.response?.data?.message || err?.data?.message || err?.message || "";
+
+  // ─── Guest verification (extracted once, reused everywhere) ────────────────
+  const runGuestVerify = useCallback(async () => {
+    if (!reference) {
+      setStatus("failed");
+      return;
+    }
+    setStatus("verifying");
+    try {
+      const response = await api.get(
+        `/payment-verify?reference=${encodeURIComponent(reference)}&guest=true`
+      );
+      const d = response.data ?? response;
+      const msg = (d?.message || "").toLowerCase();
+
+      if (d.status === "success" || d.status === "already_verified") {
+        setStatus("success");
+        setPaymentData(d);
+      } else if (d.status === "pending" || msg.includes("pending")) {
+        setStatus("pending");
+      } else if (msg.includes("abandoned")) {
+        setStatus("abandoned");
+      } else if (d.status === "failed") {
+        // "failed" from our verifier often just means Paystack hasn't
+        // confirmed yet — treat as "not confirmed" rather than hard failure
+        // so the user has a clear path to retry.
+        setStatus("not_confirmed");
+      } else {
+        setStatus("not_confirmed");
+      }
+    } catch (err) {
+      const errMsg = resolveErrMsg(err).toLowerCase();
+      if (errMsg.includes("abandoned")) {
+        setStatus("abandoned");
+      } else if (errMsg.includes("pending")) {
+        setStatus("pending");
+      } else {
+        // Network/server error — show a recoverable state, not a hard failure
+        setStatus("not_confirmed");
+      }
+    }
+  }, [reference]);
+
+  // ─── Primary verification effect ───────────────────────────────────────────
   useEffect(() => {
-    // Wait until auth store has had a chance to rehydrate
     if (!authReady) return;
 
     if (!reference) {
@@ -57,61 +109,7 @@ const PaymentVerify = () => {
     }
 
     if (isGuest) {
-      const checkResult = (d) => {
-        if (d.status === "success" || d.status === "already_verified") {
-          setStatus("success");
-          setPaymentData(d);
-          return true;
-        }
-        if (d.status === "pending") {
-          setStatus("pending");
-          return true;
-        }
-        if (d.status === "failed") {
-          setStatus("failed");
-          return true;
-        }
-        // Fallback: check message text for edge cases
-        const msg = d?.message || "";
-        if (msg.includes("abandoned")) {
-          setStatus("abandoned");
-          return true;
-        }
-        if (msg.includes("pending")) {
-          setStatus("pending");
-          return true;
-        }
-        return false;
-      };
-
-      const verifyGuest = async () => {
-        try {
-          const response = await api.get(
-            `/payment-verify?reference=${encodeURIComponent(
-              reference
-            )}&guest=true`
-          );
-          const d = response.data || response;
-          if (!checkResult(d)) {
-            setStatus("failed");
-          }
-        } catch (err) {
-          // Check for abandonment in error response
-          const errMsg = err?.message || err?.data?.message || "";
-          if (errMsg.includes("abandoned")) {
-            setStatus("abandoned");
-            return;
-          }
-          if (errMsg.includes("pending")) {
-            setStatus("pending");
-            return;
-          }
-          // Don't fake success on error — show failed so user knows something went wrong
-          console.error("Guest payment verification error:", err);
-          setStatus("failed");
-        }
-      };
-      verifyGuest();
+      runGuestVerify();
       return;
     }
 
@@ -125,18 +123,24 @@ const PaymentVerify = () => {
         const response = await api.get(
           `/payment-verify?reference=${encodeURIComponent(reference)}`
         );
-        const d = response.data || response;
+        const d = response.data ?? response;
+        const msg = (d?.message || "").toLowerCase();
+
         if (d.status === "success" || d.status === "already_verified") {
           setStatus("success");
           setPaymentData(d);
-          if (refreshUser) refreshUser();
-        } else if (d.status === "pending") {
+          refreshUser?.();
+        } else if (d.status === "pending" || msg.includes("pending")) {
           setStatus("pending");
+        } else if (msg.includes("abandoned")) {
+          setStatus("abandoned");
         } else {
+          // For authenticated users keep a strict failed state — their wallet
+          // is NOT credited until we confirm success.
           setStatus("failed");
         }
       } catch (error) {
-        const errMsg = error?.message || "";
+        const errMsg = resolveErrMsg(error).toLowerCase();
         if (errMsg.includes("abandoned")) {
           setStatus("abandoned");
         } else if (errMsg.includes("pending")) {
@@ -146,9 +150,11 @@ const PaymentVerify = () => {
         }
       }
     };
-    verifyPayment();
-  }, [reference, refreshUser, token, isGuest, authReady]);
 
+    verifyPayment();
+  }, [reference, refreshUser, token, isGuest, authReady, runGuestVerify]);
+
+  // ─── Receipt download ───────────────────────────────────────────────────────
   const downloadReceipt = () => {
     const lines = [
       "═══════════════════════════════════",
@@ -176,8 +182,7 @@ const PaymentVerify = () => {
       "       https://putduckdata.com        ",
       "═══════════════════════════════════",
     ];
-    const text = lines.join("\n");
-    const blob = new Blob([text], { type: "text/plain" });
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -186,6 +191,7 @@ const PaymentVerify = () => {
     URL.revokeObjectURL(url);
   };
 
+  // ─── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
@@ -200,6 +206,7 @@ const PaymentVerify = () => {
         </div>
 
         <div className="bg-dark-900/50 backdrop-blur-sm border border-dark-800 rounded-2xl p-8 shadow-xl text-center">
+          {/* ── VERIFYING ── */}
           {status === "verifying" && (
             <>
               <div className="w-20 h-20 bg-primary-600/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -209,11 +216,12 @@ const PaymentVerify = () => {
                 Verifying Payment
               </h2>
               <p className="text-dark-400 text-sm">
-                Please wait while we confirm your payment...
+                Please wait while we confirm your payment…
               </p>
             </>
           )}
 
+          {/* ── SUCCESS ── */}
           {status === "success" && (
             <>
               <div className="w-20 h-20 bg-primary-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -225,13 +233,13 @@ const PaymentVerify = () => {
               <p className="text-dark-400 text-sm mb-2">
                 {isGuest
                   ? isAfa
-                    ? "AFA registration submitted to admin. Processing within 24h. Track with your reference."
+                    ? "AFA registration submitted to admin. Processing within 24 h. Track with your reference."
                     : "Your data purchase is being processed. You will receive your data shortly."
                   : "Your wallet has been credited successfully."}
               </p>
               {!isGuest && countdown !== null && (
                 <p className="text-primary-400 text-xs mb-4">
-                  Redirecting to wallet in {countdown}s...
+                  Redirecting to wallet in {countdown}s…
                 </p>
               )}
 
@@ -313,6 +321,7 @@ const PaymentVerify = () => {
             </>
           )}
 
+          {/* ── NO AUTH ── */}
           {status === "no_auth" && (
             <>
               <div className="w-20 h-20 bg-primary-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -346,48 +355,133 @@ const PaymentVerify = () => {
             </>
           )}
 
+          {/* ── NOT CONFIRMED (guest "failed" — recoverable) ── */}
+          {status === "not_confirmed" && (
+            <>
+              <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <RefreshCw className="w-10 h-10 text-yellow-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Confirming Your Payment
+              </h2>
+              <p className="text-dark-400 text-sm mb-2">
+                Your payment is being processed on Paystack's end. If you
+                approved the MoMo prompt, your money is safe — tap{" "}
+                <span className="text-white font-medium">Check Again</span> in a
+                few seconds to refresh the status.
+              </p>
+              {reference && (
+                <p className="text-dark-500 text-xs mb-6">
+                  Reference:{" "}
+                  <span className="font-mono text-dark-300">{reference}</span>
+                </p>
+              )}
+
+              <div className="space-y-3">
+                {/* Primary: re-run our own verify endpoint */}
+                <Button fullWidth onClick={runGuestVerify}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Check Again
+                </Button>
+
+                {/* Secondary: open Paystack's own transaction lookup */}
+                {reference && (
+                  <Button
+                    fullWidth
+                    variant="outline"
+                    className="border-primary-600/40 text-primary-400 hover:bg-primary-600/10"
+                    onClick={() =>
+                      window.open(
+                        `https://paystack.com/pay/verify/${reference}`,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    Verify on Paystack
+                  </Button>
+                )}
+
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    fullWidth
+                    onClick={() =>
+                      navigate(isGuest ? "/buy" : "/dashboard/wallet")
+                    }
+                  >
+                    {isGuest ? "Try New Payment" : "Back to Wallet"}
+                  </Button>
+                  {isGuest && reference && (
+                    <Button
+                      variant="outline"
+                      fullWidth
+                      onClick={() => navigate(`/track-order?ref=${reference}`)}
+                    >
+                      Track Order
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <p className="text-dark-500 text-xs mt-4">
+                Still stuck? Call support:{" "}
+                <a
+                  href="tel:0558638899"
+                  className="text-primary-400 font-semibold"
+                >
+                  0558638899
+                </a>
+              </p>
+            </>
+          )}
+
+          {/* ── HARD FAILED (no reference, or auth user confirmed failed) ── */}
           {status === "failed" && (
             <>
               <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <XCircle className="w-10 h-10 text-red-500" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
-                Payment Failed
+                {!reference ? "No Reference Found" : "Payment Failed"}
               </h2>
               <p className="text-dark-400 text-sm mb-6">
                 {!reference
-                  ? "No payment reference found. Please try again."
-                  : "We could not verify your payment. If money was deducted, please contact support."}
+                  ? "No payment reference was found in the link. Please try making a new payment."
+                  : "This payment was not successful. No funds have been deducted. Please try again."}
               </p>
-              <div className="flex gap-3">
+              <div className="space-y-3">
                 <Button
-                  variant="outline"
                   fullWidth
                   onClick={() =>
-                    navigate(isGuest ? "/buy" : "/dashboard/wallet")
+                    navigate(isGuest ? "/buy" : "/dashboard/buy-data")
                   }
                 >
-                  {isGuest ? "Try Again" : "Back to Wallet"}
+                  Try Again
                 </Button>
-                <Button
-                  fullWidth
-                  onClick={() => navigate(isGuest ? "/" : "/dashboard")}
-                >
-                  {isGuest ? "Go Home" : "Go to Dashboard"}
-                </Button>
+                {!isGuest && (
+                  <Button
+                    variant="outline"
+                    fullWidth
+                    onClick={() => navigate("/dashboard/wallet")}
+                  >
+                    Back to Wallet
+                  </Button>
+                )}
               </div>
               <p className="text-dark-500 text-xs mt-4">
-                Need help? Contact support:{" "}
+                Need help? Call support:{" "}
                 <a
-                  href="tel:0322291381"
-                  className="text-primary-600 font-semibold"
+                  href="tel:0558638899"
+                  className="text-primary-400 font-semibold"
                 >
-                  0322291381
+                  0558638899
                 </a>
               </p>
             </>
           )}
 
+          {/* ── ABANDONED ── */}
           {status === "abandoned" && (
             <>
               <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -397,47 +491,62 @@ const PaymentVerify = () => {
                 Payment Not Completed
               </h2>
               <p className="text-dark-400 text-sm mb-6">
-                You did not complete the Mobile Money payment. Please try again
-                and complete the OTP on your phone.
+                It looks like the Mobile Money prompt was not approved. No money
+                was charged. Please try again and enter your OTP when prompted.
               </p>
               <div className="flex gap-3">
-                <Button fullWidth onClick={() => navigate("/buy")}>
+                <Button
+                  fullWidth
+                  onClick={() =>
+                    navigate(isGuest ? "/buy" : "/dashboard/buy-data")
+                  }
+                >
                   Try Again
                 </Button>
               </div>
               <p className="text-dark-500 text-xs mt-4">
-                Need help? Contact support:{" "}
+                Need help? Call support:{" "}
                 <a
-                  href="tel:0322291381"
-                  className="text-primary-600 font-semibold"
+                  href="tel:0558638899"
+                  className="text-primary-400 font-semibold"
                 >
-                  0322291381
+                  0558638899
                 </a>
               </p>
             </>
           )}
 
+          {/* ── PENDING ── */}
           {status === "pending" && (
             <>
               <div className="w-20 h-20 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Loader2 className="w-10 h-10 text-yellow-500" />
+                <Loader2 className="w-10 h-10 text-yellow-500 animate-spin" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">
-                Payment Still Pending
+                Waiting for Payment
               </h2>
               <p className="text-dark-400 text-sm mb-6">
-                Your payment is still pending. Please complete the Mobile Money
-                payment on your phone.
+                We're waiting for your Mobile Money approval. Please check your
+                phone and enter the OTP to complete payment, then tap{" "}
+                <span className="text-white font-medium">Check Again</span>.
               </p>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   fullWidth
-                  onClick={() => window.location.reload()}
+                  onClick={
+                    isGuest ? runGuestVerify : () => window.location.reload()
+                  }
                 >
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Check Again
                 </Button>
-                <Button fullWidth onClick={() => navigate("/buy")}>
+                <Button
+                  fullWidth
+                  onClick={() =>
+                    navigate(isGuest ? "/buy" : "/dashboard/buy-data")
+                  }
+                >
                   Start Over
                 </Button>
               </div>

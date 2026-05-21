@@ -266,7 +266,7 @@ const TrackOrder = () => {
             {/* Actions */}
             <div className="px-5 pb-5 flex gap-2.5">
               <a
-                href="https://wa.me/233322291381?text=Hi%2C+I+need+help+with+my+order"
+                href="https://wa.me/233558638899?text=Hi%2C+I+need+help+with+my+order"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex-1 text-center py-2.5 rounded-xl border border-dark-700 text-dark-300 text-sm hover:bg-dark-800/50 hover:text-white transition-colors"

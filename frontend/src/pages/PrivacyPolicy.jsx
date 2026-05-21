@@ -316,10 +316,10 @@ const PrivacyPolicy = () => {
               <div className="flex items-center space-x-3">
                 <Phone className="w-5 h-5 text-primary-600" />
                 <a
-                  href="tel:0322291381"
+                  href="tel:0558638899"
                   className="text-primary-600 hover:text-primary-500"
                 >
-                  0322291381
+                  0558638899
                 </a>
               </div>
               <div className="flex items-start space-x-3">

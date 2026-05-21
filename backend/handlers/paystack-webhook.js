@@ -252,9 +252,11 @@ export const handler = async (event) => {
                 );
                 console.log(`1Papi guest data delivery ${deliveryStatus}:`, reference);
               } else {
-                // 1Papi rejected the order — mark failed so admin can refund from Paystack
+                // 1Papi rejected — payment IS confirmed, but delivery failed.
+                // Keep status='success' so guest isn't shown "Payment Failed".
+                // Flag needs_manual_refund so admin can issue Paystack refund.
                 await executeQuery(
-                  `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
+                  `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
                   [
                     JSON.stringify({
                       delivery_failed: true,
@@ -288,9 +290,10 @@ export const handler = async (event) => {
             "Guest delivery error (payment already confirmed):",
             deliveryErr.message
           );
-          // Unexpected exception — mark failed, admin can refund from Paystack
+          // Unexpected exception — payment IS confirmed, keep status='success'.
+          // Flag for admin to manually refund via Paystack.
           await executeQuery(
-            `UPDATE transactions SET status = 'failed', metadata = metadata || $1::jsonb WHERE reference = $2`,
+            `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
             [
               JSON.stringify({
                 delivery_error: deliveryErr.message,

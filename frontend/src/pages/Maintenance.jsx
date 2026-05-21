@@ -231,11 +231,11 @@ const Maintenance = ({ message, scheduledEnd }) => {
               </p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-2.5">
                 <a
-                  href="tel:0322291381"
+                  href="tel:0558638899"
                   className="group flex items-center justify-center gap-2.5 bg-white/[0.04] border border-white/[0.07] hover:border-primary-600/40 rounded-xl px-5 py-3 text-sm text-dark-400 hover:text-white transition-all"
                 >
                   <Phone className="w-4 h-4 text-primary-500 group-hover:scale-110 transition-transform" />
-                  0322291381
+                  0558638899
                 </a>
                 <a
                   href="https://whatsapp.com/channel/0029Vb7aNEuIyPtaHYaiHx1m"

@@ -63,16 +63,14 @@ export const handler = async (event) => {
 
     let enhancedMessage = statusMessages[tx.status] || "Order status updated.";
 
-    // Manual fulfilment: payment confirmed, delivery being handled by team
     if (meta.needs_manual_fulfil && tx.status !== "failed") {
       enhancedMessage = "Payment confirmed. Your data bundle is being prepared — it will be delivered to your number shortly.";
+    } else if (meta.delivery_failed && meta.needs_manual_refund) {
+      enhancedMessage = "Your payment was received but we had a delivery issue. Please contact support — a refund will be processed for you.";
     } else if (tx.status === "failed") {
-      const failureReason = meta.delivery_failed
-        ? "Delivery failed"
-        : meta.needs_manual_refund
-        ? "Refund may be required"
-        : "Payment was not completed";
-      enhancedMessage = `${failureReason}. Please contact support.`;
+      enhancedMessage = meta.needs_manual_refund
+        ? "Your payment was received but delivery failed. Please contact support for a refund."
+        : "Payment was not completed. Please contact support if money was deducted.";
     }
 
     return successResponse(

@@ -79,11 +79,11 @@ const TermsOfService = () => {
           {/* Introduction */}
           <section>
             <p className="text-dark-300 leading-relaxed">
-              Welcome to PutDuckData. These Terms of Service ("Terms")
-              govern your access to and use of our platform, services, and
-              features. By accessing or using PutDuckData, you agree to be
-              bound by these Terms. If you disagree with any part of these
-              Terms, you may not access our platform.
+              Welcome to PutDuckData. These Terms of Service ("Terms") govern
+              your access to and use of our platform, services, and features. By
+              accessing or using PutDuckData, you agree to be bound by these
+              Terms. If you disagree with any part of these Terms, you may not
+              access our platform.
             </p>
           </section>
 
@@ -94,14 +94,14 @@ const TermsOfService = () => {
             </h2>
             <div className="text-dark-300 space-y-3">
               <p className="leading-relaxed">
-                By creating an account and using PutDuckData, you
-                acknowledge that you have read, understood, and agree to be
-                bound by these Terms and our Privacy Policy. These Terms apply
-                to all users, including customers and administrators.
+                By creating an account and using PutDuckData, you acknowledge
+                that you have read, understood, and agree to be bound by these
+                Terms and our Privacy Policy. These Terms apply to all users,
+                including customers and administrators.
               </p>
               <p className="leading-relaxed">
-                By using PutDuckData, you represent that you are a valid
-                SIM card holder on any supported network. There is no age
+                By using PutDuckData, you represent that you are a valid SIM
+                card holder on any supported network. There is no age
                 restriction to use this platform, however minors should have
                 parental or guardian consent before creating an account.
               </p>
@@ -296,10 +296,10 @@ const TermsOfService = () => {
             </h2>
             <div className="text-dark-300 space-y-3">
               <p className="leading-relaxed">
-                All content on PutDuckData, including but not limited to
-                text, graphics, logos, images, software, and design, is the
-                property of PutDuckData or its licensors and is protected
-                by copyright, trademark, and other intellectual property laws.
+                All content on PutDuckData, including but not limited to text,
+                graphics, logos, images, software, and design, is the property
+                of PutDuckData or its licensors and is protected by copyright,
+                trademark, and other intellectual property laws.
               </p>
               <p className="leading-relaxed">
                 You may not copy, modify, distribute, sell, or lease any part of
@@ -338,11 +338,11 @@ const TermsOfService = () => {
                 7.3 Limitation of Liability
               </h3>
               <p className="leading-relaxed">
-                PutDuckData shall not be liable for any indirect,
-                incidental, special, consequential, or punitive damages
-                resulting from your use of or inability to use the platform. Our
-                total liability shall not exceed the amount you paid to us in
-                the past 12 months.
+                PutDuckData shall not be liable for any indirect, incidental,
+                special, consequential, or punitive damages resulting from your
+                use of or inability to use the platform. Our total liability
+                shall not exceed the amount you paid to us in the past 12
+                months.
               </p>
             </div>
           </section>
@@ -387,8 +387,8 @@ const TermsOfService = () => {
               </p>
               <p className="leading-relaxed">
                 You agree to first attempt to resolve any dispute informally by
-                contacting us at support@putduckdata.com before initiating any formal
-                proceedings.
+                contacting us at support@putduckdata.com before initiating any
+                formal proceedings.
               </p>
             </div>
           </section>
@@ -413,8 +413,8 @@ const TermsOfService = () => {
             </h2>
             <p className="text-dark-300 leading-relaxed">
               These Terms, together with our Privacy Policy, constitute the
-              entire agreement between you and PutDuckData regarding your
-              use of the platform and supersede all prior agreements and
+              entire agreement between you and PutDuckData regarding your use of
+              the platform and supersede all prior agreements and
               understandings.
             </p>
           </section>
@@ -441,10 +441,10 @@ const TermsOfService = () => {
               <p className="text-dark-300">
                 Tel:{" "}
                 <a
-                  href="tel:0322291381"
+                  href="tel:0558638899"
                   className="text-primary-600 hover:text-primary-500"
                 >
-                  0322291381
+                  0558638899
                 </a>
               </p>
             </div>
@@ -453,8 +453,8 @@ const TermsOfService = () => {
           {/* Acknowledgment */}
           <section className="border-t border-dark-800 pt-6">
             <p className="text-dark-400 text-sm leading-relaxed">
-              By using PutDuckData, you acknowledge that you have read
-              these Terms of Service and agree to be bound by them.
+              By using PutDuckData, you acknowledge that you have read these
+              Terms of Service and agree to be bound by them.
             </p>
           </section>
         </div>

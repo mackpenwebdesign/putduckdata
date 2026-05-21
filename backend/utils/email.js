@@ -109,7 +109,7 @@ export const EmailTemplates = {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} PutDuckData. All rights reserved.</p>
           <p>Contact: support@putduckdata.com</p>
-          <p>Tel: 0322291381</p>
+          <p>Tel: 0558638899</p>
         </div>
       </div>
     </body>
@@ -153,7 +153,7 @@ export const EmailTemplates = {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} PutDuckData. All rights reserved.</p>
           <p>Contact: support@putduckdata.com</p>
-          <p>Tel: 0322291381</p>
+          <p>Tel: 0558638899</p>
         </div>
       </div>
     </body>
@@ -187,7 +187,7 @@ export const EmailTemplates = {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} PutDuckData. All rights reserved.</p>
           <p>Contact: support@putduckdata.com</p>
-          <p>Tel: 0322291381</p>
+          <p>Tel: 0558638899</p>
         </div>
       </div>
     </body>
@@ -227,7 +227,7 @@ export const EmailTemplates = {
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} PutDuckData. All rights reserved.</p>
           <p>Contact: support@putduckdata.com</p>
-          <p>Tel: 0322291381</p>
+          <p>Tel: 0558638899</p>
         </div>
       </div>
     </body>
