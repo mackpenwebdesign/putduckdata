@@ -12,30 +12,59 @@ import {
 } from "../utils/notifications.js";
 import { buyData } from "../utils/onepapi.js";
 
+// Returns true when a 1Papi error message indicates an account balance problem.
+const isProviderBalanceError = (msg = "") => {
+  const m = msg.toLowerCase();
+  return (
+    m.includes("insufficient") ||
+    m.includes("balance") ||
+    m.includes("low fund") ||
+    m.includes("not enough") ||
+    m.includes("top up")
+  );
+};
+
 /**
- * Bulk verify pending orders from last 24h and auto-place to provider
+ * Bulk verify pending orders from last 24h and auto-place to provider.
+ * Pass optional ids array in body to only retry specific transactions.
  */
-const handleVerifyPending24h = async (auth) => {
+const handleVerifyPending24h = async (auth, body = {}) => {
   try {
     const isRealAdmin = await verifyAdminFromDB(auth.user.id);
     if (!isRealAdmin) {
       return errorResponse(403, "Admin access revoked");
     }
 
-    // Find all data purchases from last 24h that have no provider_reference
-    // (meaning they were never placed to the provider)
-    const pendingTx = await executeQuery(
-      `SELECT id, user_id, amount, status, reference, type, metadata, recipient_phone
-       FROM transactions
-       WHERE type IN ('data_purchase', 'guest_data_purchase')
-         AND status IN ('pending', 'processing', 'success')
-         AND created_at > NOW() - INTERVAL '24 hours'
-         AND (metadata->>'provider_reference' IS NULL
-              OR metadata->>'provider_reference' = ''
-              OR metadata->>'delivery_attempted' IS NULL)
-       ORDER BY created_at ASC
-       LIMIT 50`
-    );
+    const filterIds = Array.isArray(body.ids) && body.ids.length > 0 ? body.ids : null;
+
+    let pendingTx;
+    if (filterIds) {
+      // Retry only the specified transaction IDs
+      pendingTx = await executeQuery(
+        `SELECT id, user_id, amount, status, reference, type, metadata, recipient_phone
+         FROM transactions
+         WHERE id = ANY($1)
+           AND type IN ('data_purchase', 'guest_data_purchase')
+           AND status IN ('pending', 'processing', 'success')
+         ORDER BY created_at ASC
+         LIMIT 100`,
+        [filterIds]
+      );
+    } else {
+      // Find all data purchases from last 24h that have no provider_reference
+      pendingTx = await executeQuery(
+        `SELECT id, user_id, amount, status, reference, type, metadata, recipient_phone
+         FROM transactions
+         WHERE type IN ('data_purchase', 'guest_data_purchase')
+           AND status IN ('pending', 'processing', 'success')
+           AND created_at > NOW() - INTERVAL '24 hours'
+           AND (metadata->>'provider_reference' IS NULL
+                OR metadata->>'provider_reference' = ''
+                OR metadata->>'delivery_attempted' IS NULL)
+         ORDER BY created_at ASC
+         LIMIT 50`
+      );
+    }
 
     let placed = 0;
     let failed = 0;
@@ -271,16 +300,75 @@ const handleVerifyPending24h = async (auth) => {
               final_status: finalStatus,
             });
           } else {
-            finalStatus = "failed";
             providerError = providerResult.message || "Provider rejected the order";
 
-            if (tx.type === "data_purchase" && tx.user_id) {
-              await executeTransaction(async (sql) => {
-                await sql(
-                  "UPDATE users SET wallet_balance = wallet_balance + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-                  [parseFloat(tx.amount), tx.user_id]
-                );
-                await sql(
+            if (isProviderBalanceError(providerError)) {
+              // Provider has insufficient balance — keep queued for manual, don't refund
+              await executeQuery(
+                `UPDATE transactions SET
+                   status = 'processing',
+                   metadata = metadata || $1::jsonb,
+                   updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $2`,
+                [
+                  JSON.stringify({
+                    provider_error: providerError,
+                    needs_manual_fulfil: true,
+                    manual_reason: "provider_low_balance",
+                    admin_bulk_verified: true,
+                    verified_by: auth.user.id,
+                    verified_at: new Date().toISOString(),
+                  }),
+                  tx.id,
+                ]
+              );
+              skipped++;
+              results.push({
+                ref: tx.reference,
+                status: "skipped",
+                reason: "provider_low_balance",
+                error: providerError,
+              });
+            } else {
+              finalStatus = "failed";
+
+              if (tx.type === "data_purchase" && tx.user_id) {
+                await executeTransaction(async (sql) => {
+                  await sql(
+                    "UPDATE users SET wallet_balance = wallet_balance + $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2",
+                    [parseFloat(tx.amount), tx.user_id]
+                  );
+                  await sql(
+                    `UPDATE transactions SET
+                       status = 'failed',
+                       metadata = metadata || $1::jsonb,
+                       updated_at = CURRENT_TIMESTAMP
+                     WHERE id = $2`,
+                    [
+                      JSON.stringify({
+                        provider: "1papi",
+                        provider_error: providerError,
+                        auto_refunded: true,
+                        refund_amount: parseFloat(tx.amount),
+                        admin_bulk_verified: true,
+                        verified_by: auth.user.id,
+                        verified_at: new Date().toISOString(),
+                      }),
+                      tx.id,
+                    ]
+                  );
+                });
+                try {
+                  await createNotification(
+                    tx.user_id,
+                    NotificationType.DATA_PURCHASE,
+                    "Bulk Verify Failed — Refunded",
+                    `Your order (${tx.reference}) failed during bulk verification. GH₵${parseFloat(tx.amount).toFixed(2)} has been refunded to your wallet.`,
+                    { refunded: true, amount: parseFloat(tx.amount) }
+                  );
+                } catch (_) {}
+              } else {
+                await executeQuery(
                   `UPDATE transactions SET
                      status = 'failed',
                      metadata = metadata || $1::jsonb,
@@ -290,8 +378,7 @@ const handleVerifyPending24h = async (auth) => {
                     JSON.stringify({
                       provider: "1papi",
                       provider_error: providerError,
-                      auto_refunded: true,
-                      refund_amount: parseFloat(tx.amount),
+                      delivery_attempted: true,
                       admin_bulk_verified: true,
                       verified_by: auth.user.id,
                       verified_at: new Date().toISOString(),
@@ -299,43 +386,15 @@ const handleVerifyPending24h = async (auth) => {
                     tx.id,
                   ]
                 );
+              }
+              failed++;
+              results.push({
+                ref: tx.reference,
+                status: "failed",
+                provider: "1papi",
+                error: providerError,
               });
-              try {
-                await createNotification(
-                  tx.user_id,
-                  NotificationType.DATA_PURCHASE,
-                  "Bulk Verify Failed — Refunded",
-                  `Your order (${tx.reference}) failed during bulk verification. GH₵${parseFloat(tx.amount).toFixed(2)} has been refunded to your wallet.`,
-                  { refunded: true, amount: parseFloat(tx.amount) }
-                );
-              } catch (_) {}
-            } else {
-              await executeQuery(
-                `UPDATE transactions SET
-                   status = 'failed',
-                   metadata = metadata || $1::jsonb,
-                   updated_at = CURRENT_TIMESTAMP
-                 WHERE id = $2`,
-                [
-                  JSON.stringify({
-                    provider: "1papi",
-                    provider_error: providerError,
-                    delivery_attempted: true,
-                    admin_bulk_verified: true,
-                    verified_by: auth.user.id,
-                    verified_at: new Date().toISOString(),
-                  }),
-                  tx.id,
-                ]
-              );
             }
-            failed++;
-            results.push({
-              ref: tx.reference,
-              status: "failed",
-              provider: "1papi",
-              error: providerError,
-            });
           }
         } else {
           // No provider_plan_id — queue for manual
@@ -554,7 +613,7 @@ export const handler = async (event) => {
 
       // ── Bulk: verify all pending orders from last 24h ────────────────────
       if (action === "verify_pending_24h") {
-        return await handleVerifyPending24h(auth);
+        return await handleVerifyPending24h(auth, body);
       }
 
       if (!transaction_id) {
