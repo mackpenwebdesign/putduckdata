@@ -22,7 +22,7 @@ export const handler = async (event) => {
       try {
         const maintenance = await checkMaintenanceMode();
         const allSettings = await executeQuery(
-          "SELECT setting_key, setting_value FROM system_settings WHERE setting_key LIKE 'maintenance_%' OR setting_key = 'data_provider'"
+          "SELECT setting_key, setting_value FROM system_settings WHERE setting_key LIKE 'maintenance_%' OR setting_key IN ('data_provider', 'validity_label')"
         );
         const settings = {};
         for (const row of allSettings) {
@@ -50,7 +50,7 @@ export const handler = async (event) => {
         return errorResponse(400, 'Settings array is required');
       }
 
-      const allowedKeys = ['maintenance_mode', 'maintenance_scheduled_start', 'maintenance_scheduled_end', 'maintenance_message', 'data_provider'];
+      const allowedKeys = ['maintenance_mode', 'maintenance_scheduled_start', 'maintenance_scheduled_end', 'maintenance_message', 'data_provider', 'validity_label'];
 
       // Ensure system_settings table exists before writing
       await executeQuery(`

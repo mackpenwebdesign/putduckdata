@@ -13,6 +13,7 @@ import {
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import useAuthStore from "../../stores/authStore";
+import useSiteSettingsStore from "../../stores/siteSettingsStore";
 import api from "../../utils/api";
 import { formatCurrency, cleanPlanName } from "../../utils/formatters";
 import { toast } from "react-hot-toast";
@@ -96,6 +97,7 @@ const BuyData = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, refreshUser, setUser } = useAuthStore();
+  const { validityLabel } = useSiteSettingsStore();
 
   const [view, setView] = useState("browse");
   const [activeTab, setActiveTab] = useState("MTN");
@@ -168,7 +170,7 @@ const BuyData = () => {
             id: plan.id,
             name: cleanPlanName(plan.plan_name),
             price: parseFloat(plan.price),
-            validity: "Non-Expiring",
+            validity: validityLabel,
             data: plan.data_volume,
             data_plan_id: plan.id,
           }));

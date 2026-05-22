@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import Button from "../components/Button";
 import api from "../utils/api";
 import useThemeStore from "../stores/themeStore";
+import useSiteSettingsStore from "../stores/siteSettingsStore";
 import { cleanPlanName } from "../utils/formatters";
 
 const NETWORK_CONFIG = {
@@ -483,6 +484,7 @@ const Landing = () => {
   const [plans, setPlans] = useState({});
   const [loadingPlans, setLoadingPlans] = useState(true);
   const { theme, toggleTheme } = useThemeStore();
+  const { validityLabel } = useSiteSettingsStore();
   const [activeNetwork, setActiveNetwork] = useState("MTN");
   const [heroIdx, setHeroIdx] = useState(0);
   const [heroVisible, setHeroVisible] = useState(true);
@@ -1057,7 +1059,7 @@ const Landing = () => {
                             {plan.data_volume}
                           </h3>
                           <p className="text-dark-400 text-xs mb-3">
-                            {cleanPlanName(plan.plan_name)} &middot; Non-Expiring
+                            {cleanPlanName(plan.plan_name)}{validityLabel ? ` · ${validityLabel}` : ""}
                           </p>
                           <div className="flex items-center justify-between">
                             <span className="text-white font-bold text-xl">

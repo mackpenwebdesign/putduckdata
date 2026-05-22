@@ -18,6 +18,7 @@ import {
 import api from "../utils/api";
 import { formatCurrency, cleanPlanName } from "../utils/formatters";
 import { toast } from "react-hot-toast";
+import useSiteSettingsStore from "../stores/siteSettingsStore";
 
 const NETWORK_STYLE = {
   MTN: { color: "text-yellow-400", bg: "bg-yellow-500/10", border: "border-yellow-500/20", dot: "bg-yellow-400", label: "MTN MoMo" },
@@ -64,6 +65,7 @@ const TrackOrder = () => {
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(false);
+  const { validityLabel } = useSiteSettingsStore();
 
   useEffect(() => {
     if (searchParams.get("ref")) handleTrack();
@@ -254,10 +256,12 @@ const TrackOrder = () => {
                   <p className="text-white text-sm font-semibold">{order.data_volume}</p>
                 </div>
               )}
-              <div className="bg-dark-800/40 rounded-xl p-3">
-                <p className="text-dark-500 text-[10px] font-medium uppercase tracking-wide mb-1">Validity</p>
-                <p className="text-white text-sm font-semibold">Non-Expiring</p>
-              </div>
+              {validityLabel && (
+                <div className="bg-dark-800/40 rounded-xl p-3">
+                  <p className="text-dark-500 text-[10px] font-medium uppercase tracking-wide mb-1">Validity</p>
+                  <p className="text-white text-sm font-semibold">{validityLabel}</p>
+                </div>
+              )}
               {order.amount > 0 && (
                 <div className="bg-dark-800/40 rounded-xl p-3">
                   <p className="text-dark-500 text-[10px] font-medium uppercase tracking-wide mb-1">Amount Paid</p>

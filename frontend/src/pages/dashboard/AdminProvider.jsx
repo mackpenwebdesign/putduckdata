@@ -8,6 +8,7 @@ import {
   Wallet,
   Activity,
   TrendingUp,
+  Tag,
 } from "lucide-react";
 import Button from "../../components/Button";
 import api from "../../utils/api";
@@ -22,6 +23,8 @@ const AdminProvider = () => {
   const [toggling, setToggling] = useState(false);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [balance, setBalance] = useState(null);
+  const [validityLabel, setValidityLabel] = useState("Non-Expiring");
+  const [validityLabelSaving, setValidityLabelSaving] = useState(false);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -32,6 +35,10 @@ const AdminProvider = () => {
         ? rawProvider.replace(/^"|"$/g, "")
         : rawProvider;
       setIsManual(provider === "manual");
+      const rawValidity = payload?.settings?.validity_label;
+      if (rawValidity !== undefined && rawValidity !== null) {
+        setValidityLabel(typeof rawValidity === "string" ? rawValidity : "Non-Expiring");
+      }
     } catch {
       // keep current state
     } finally {
@@ -94,6 +101,23 @@ const AdminProvider = () => {
       setSyncLoading(false);
     }
   }, []);
+
+  const handleSaveValidityLabel = async () => {
+    setValidityLabelSaving(true);
+    try {
+      await api.put("/admin-site-settings", {
+        settings: [{ key: "validity_label", value: validityLabel.trim() }],
+      });
+      // Sync to global store so UI updates instantly without refresh
+      const { default: useSiteSettingsStore } = await import("../../stores/siteSettingsStore");
+      useSiteSettingsStore.getState().setValidityLabel(validityLabel.trim());
+      toast.success(validityLabel.trim() ? `Validity label set to "${validityLabel.trim()}"` : "Validity label cleared — hidden from users");
+    } catch {
+      toast.error("Failed to save validity label");
+    } finally {
+      setValidityLabelSaving(false);
+    }
+  };
 
   if (settingsLoading) {
     return (
@@ -260,6 +284,39 @@ const AdminProvider = () => {
           <p className="text-dark-600 text-xs mt-3">
             Enable to pause automatic delivery and queue orders for manual fulfilment.
           </p>
+        )}
+      </div>
+
+      {/* Validity Label */}
+      <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-dark-800 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Tag className="w-5 h-5 text-dark-400" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-base">Validity Label</h3>
+            <p className="text-dark-500 text-xs">Shown on plan cards, buy page, and order tracking. Leave empty to hide.</p>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={validityLabel}
+            onChange={(e) => setValidityLabel(e.target.value)}
+            placeholder="e.g. Non-Expiring, 90 Days, Lifetime…"
+            className="flex-1 bg-dark-800/60 border border-dark-700 text-white placeholder-dark-600 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary-600/60 focus:ring-1 focus:ring-primary-600/20 transition-colors"
+          />
+          <button
+            onClick={handleSaveValidityLabel}
+            disabled={validityLabelSaving}
+            className="px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white text-sm font-semibold transition-colors flex items-center gap-2 whitespace-nowrap"
+          >
+            {validityLabelSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            Save
+          </button>
+        </div>
+        {validityLabel.trim() === "" && (
+          <p className="text-yellow-400/70 text-xs mt-2">Validity will be hidden from users when empty.</p>
         )}
       </div>
 

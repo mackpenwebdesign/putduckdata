@@ -32,6 +32,7 @@ import GuestAFA from "./pages/GuestAFA";
 // Store
 import useAuthStore from "./stores/authStore";
 import useThemeStore from "./stores/themeStore";
+import useSiteSettingsStore from "./stores/siteSettingsStore";
 
 // Utils
 import api from "./utils/api";
@@ -239,6 +240,9 @@ function App() {
         });
       } else {
         setMaintenance(null);
+      }
+      if (d.settings?.validity_label) {
+        useSiteSettingsStore.getState().setValidityLabel(d.settings.validity_label);
       }
     } catch {
       // If the settings endpoint fails, continue normally

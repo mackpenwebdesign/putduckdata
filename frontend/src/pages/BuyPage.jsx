@@ -16,6 +16,7 @@ import Input from "../components/Input";
 import api from "../utils/api";
 import { formatCurrency, cleanPlanName } from "../utils/formatters";
 import { toast } from "react-hot-toast";
+import useSiteSettingsStore from "../stores/siteSettingsStore";
 
 const NETWORKS = [
   { id: "MTN", name: "MTN", logo: "/images/MTN logo.png", prefixes: ["024", "025", "053", "054", "055", "059"] },
@@ -130,6 +131,7 @@ const SkeletonCard = () => (
 );
 
 const BuyPage = () => {
+  const { validityLabel } = useSiteSettingsStore();
   const [view, setView] = useState("browse");
   const [activeTab, setActiveTab] = useState("MTN");
   const [allPlans, setAllPlans] = useState({});
@@ -187,7 +189,7 @@ const BuyPage = () => {
             id: plan.id,
             name: cleanPlanName(plan.plan_name),
             price: parseFloat(plan.price),
-            validity: "Non-Expiring",
+            validity: validityLabel,
             data: plan.data_volume,
             data_plan_id: plan.id,
           }));
