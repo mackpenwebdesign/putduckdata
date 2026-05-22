@@ -168,7 +168,7 @@ const BuyData = () => {
             id: plan.id,
             name: cleanPlanName(plan.plan_name),
             price: parseFloat(plan.price),
-            validity: "90 days",
+            validity: "Non-Expiring",
             data: plan.data_volume,
             data_plan_id: plan.id,
           }));

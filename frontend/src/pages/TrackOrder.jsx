@@ -256,7 +256,7 @@ const TrackOrder = () => {
               )}
               <div className="bg-dark-800/40 rounded-xl p-3">
                 <p className="text-dark-500 text-[10px] font-medium uppercase tracking-wide mb-1">Validity</p>
-                <p className="text-white text-sm font-semibold">90 days</p>
+                <p className="text-white text-sm font-semibold">Non-Expiring</p>
               </div>
               {order.amount > 0 && (
                 <div className="bg-dark-800/40 rounded-xl p-3">
