@@ -61,8 +61,8 @@ export const handler = async (event) => {
       `SELECT
         DATE(t.created_at) as date,
         SUM(CASE WHEN t.type = 'wallet_fund' AND t.status = 'success' THEN t.amount ELSE 0 END) as wallet_funds,
-        SUM(CASE WHEN t.type = 'data_purchase' AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as data_sales,
-        COUNT(CASE WHEN t.status IN ('success', 'completed') THEN 1 END) as transaction_count
+        SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as data_sales,
+        COUNT(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN 1 END) as transaction_count
        FROM transactions t
        WHERE ${txnDateCondition}
        GROUP BY DATE(t.created_at)
@@ -73,8 +73,8 @@ export const handler = async (event) => {
     const revenueSummary = await executeQuery(
       `SELECT
         SUM(CASE WHEN t.type = 'wallet_fund' AND t.status = 'success' THEN t.amount ELSE 0 END) as total_wallet_funds,
-        SUM(CASE WHEN t.type = 'data_purchase' AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as total_data_sales,
-        COUNT(CASE WHEN t.status IN ('success', 'completed') THEN 1 END) as total_transactions
+        SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as total_data_sales,
+        COUNT(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN 1 END) as total_transactions
        FROM transactions t
        WHERE ${txnDateCondition}`
     );
@@ -107,7 +107,7 @@ export const handler = async (event) => {
         COUNT(*) as purchase_count,
         SUM(t.amount) as total_revenue
        FROM transactions t
-       WHERE t.type = 'data_purchase'
+       WHERE t.type IN ('data_purchase', 'guest_data_purchase')
          AND t.status IN ('success', 'completed')
          AND t.metadata->>'network' IS NOT NULL
          AND ${txnDateCondition}
@@ -157,8 +157,8 @@ export const handler = async (event) => {
       `SELECT
         (SELECT COUNT(*) FROM users) as total_users,
         (SELECT COALESCE(SUM(wallet_balance), 0) FROM users) as total_wallet_balance,
-        (SELECT COUNT(*) FROM transactions WHERE status IN ('success', 'completed')) as total_successful_transactions,
-        (SELECT COUNT(*) FROM transactions WHERE type = 'data_purchase' AND status IN ('success', 'completed', 'pending', 'processing')) as total_data_purchases`
+        (SELECT COUNT(*) FROM transactions WHERE type IN ('data_purchase', 'guest_data_purchase') AND status IN ('success', 'completed')) as total_successful_transactions,
+        (SELECT COUNT(*) FROM transactions WHERE type IN ('data_purchase', 'guest_data_purchase') AND status IN ('success', 'completed', 'pending', 'processing')) as total_data_purchases`
     );
 
     // ── 10. Visitor Stats — total visits in period ────────────────────────────
