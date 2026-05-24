@@ -6,7 +6,7 @@
   useLocation,
 } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Components
 import LoadingScreen from "./components/LoadingScreen";
@@ -189,71 +189,6 @@ function App() {
   const isPaymentVerifyPage =
     window.location.pathname.includes("/payment/verify");
 
-  const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes total
-  const WARNING_BEFORE   =  2 * 60 * 1000; // warn 2 minutes before logout
-  const inactivityTimer  = useRef(null);
-  const warningTimer     = useRef(null);
-  const countdownTimer   = useRef(null);
-  const [idleWarning, setIdleWarning] = useState(false);
-  const [idleCountdown, setIdleCountdown] = useState(120);
-
-  const clearAllTimers = useCallback(() => {
-    clearTimeout(inactivityTimer.current);
-    clearTimeout(warningTimer.current);
-    clearInterval(countdownTimer.current);
-  }, []);
-
-  const resetInactivityTimer = useCallback(() => {
-    clearAllTimers();
-    setIdleWarning(false);
-
-    if (!useAuthStore.getState().token) return;
-
-    // Show warning 2 min before logout
-    warningTimer.current = setTimeout(() => {
-      setIdleWarning(true);
-      setIdleCountdown(WARNING_BEFORE / 1000);
-      countdownTimer.current = setInterval(() => {
-        setIdleCountdown((c) => c - 1);
-      }, 1000);
-    }, INACTIVITY_TIMEOUT - WARNING_BEFORE);
-
-    // Actual logout
-    inactivityTimer.current = setTimeout(() => {
-      if (useAuthStore.getState().token) {
-        clearInterval(countdownTimer.current);
-        setIdleWarning(false);
-        useAuthStore.getState().logout();
-        toast("Logged out due to inactivity.", { icon: "🔒", duration: 6000 });
-      }
-    }, INACTIVITY_TIMEOUT);
-  }, [INACTIVITY_TIMEOUT, WARNING_BEFORE, clearAllTimers]);
-
-  const stayLoggedIn = useCallback(() => {
-    setIdleWarning(false);
-    resetInactivityTimer();
-  }, [resetInactivityTimer]);
-
-  useEffect(() => {
-    if (isPaymentVerifyPage) return;
-
-    if (!token) {
-      clearAllTimers();
-      setIdleWarning(false);
-      return;
-    }
-
-    resetInactivityTimer();
-    const events = ["mousemove", "keydown", "click", "scroll", "touchstart"];
-    events.forEach((evt) => window.addEventListener(evt, resetInactivityTimer));
-
-    return () => {
-      clearAllTimers();
-      events.forEach((evt) =>
-        window.removeEventListener(evt, resetInactivityTimer)
-      );
-    };
-  }, [token, resetInactivityTimer, clearAllTimers, isPaymentVerifyPage]);
 
   useEffect(() => {
     useThemeStore.getState().initTheme();
@@ -377,41 +312,6 @@ function App() {
         adminPath={adminPath}
       />
 
-      {/* Idle warning overlay */}
-      {idleWarning && token && (
-        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 sm:pb-0">
-          <div className="w-full max-w-sm bg-dark-900 border border-dark-700 rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xl">🔒</span>
-              </div>
-              <div>
-                <p className="text-white font-bold text-sm">Still there?</p>
-                <p className="text-dark-400 text-xs">You'll be logged out due to inactivity</p>
-              </div>
-            </div>
-
-            {/* Countdown bar */}
-            <div className="h-1.5 bg-dark-700 rounded-full overflow-hidden mb-4">
-              <div
-                className="h-full bg-yellow-500 rounded-full transition-all duration-1000"
-                style={{ width: `${(idleCountdown / (WARNING_BEFORE / 1000)) * 100}%` }}
-              />
-            </div>
-
-            <p className="text-dark-400 text-xs text-center mb-4">
-              Logging out in <span className="text-yellow-400 font-bold">{idleCountdown}s</span>
-            </p>
-
-            <button
-              onClick={stayLoggedIn}
-              className="w-full py-2.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-sm font-semibold transition-colors"
-            >
-              Keep me logged in
-            </button>
-          </div>
-        </div>
-      )}
     </BrowserRouter>
   );
 }
