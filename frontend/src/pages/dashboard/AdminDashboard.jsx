@@ -2,26 +2,19 @@
 import { useNavigate } from "react-router-dom";
 import {
   Users,
-  TrendingUp,
   Banknote,
-  Activity,
   ShoppingBag,
-  AlertCircle,
   Settings,
   BarChart3,
   Bell,
   X,
   Search,
-  Send,
   Power,
   Wallet,
-  Phone,
   CheckCircle,
-  XCircle,
   Package,
   KeyRound,
   ClipboardList,
-  Ban,
   MinusCircle,
   PlusCircle,
   Copy,
@@ -36,7 +29,6 @@ import Card, {
 } from "../../components/Card";
 import StatCard from "../../components/StatCard";
 import Badge from "../../components/Badge";
-import Alert from "../../components/Alert";
 import Button from "../../components/Button";
 import Input from "../../components/Input";
 import useAuthStore from "../../stores/authStore";
@@ -199,6 +191,7 @@ const ShareBuyLink = () => {
   const loginUrl = `${window.location.origin}/login`;
   const trackUrl = `${window.location.origin}/track-order`;
   const [copied, setCopied] = useState(null);
+  const [open, setOpen] = useState(false);
 
   const copy = (text, key) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -238,17 +231,29 @@ const ShareBuyLink = () => {
 
   return (
     <Card variant="default" padding="lg">
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Link2 className="w-6 h-6 text-primary-500" />
-          <div>
-            <CardTitle>Share Link</CardTitle>
-            <CardDescription>
-              Send customers directly to buy or track their orders
-            </CardDescription>
+      <button
+        type="button"
+        onClick={() => setOpen((p) => !p)}
+        className="w-full text-left"
+      >
+        <CardHeader>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Link2 className="w-6 h-6 text-primary-500" />
+              <div>
+                <CardTitle>Share Link</CardTitle>
+                <CardDescription>
+                  Send customers directly to buy or track their orders
+                </CardDescription>
+              </div>
+            </div>
+            <span className="text-dark-400 text-xs font-medium">
+              {open ? "▲ Hide" : "▼ Show"}
+            </span>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
+      </button>
+      {open && (
       <CardContent>
         <div className="space-y-3">
           {links.map(({ key, label, desc, url, highlight }) => (
@@ -294,6 +299,7 @@ const ShareBuyLink = () => {
           </button>
         </div>
       </CardContent>
+      )}
     </Card>
   );
 };
@@ -704,16 +710,6 @@ const AdminDashboard = () => {
     totalUsers: 0,
     totalRevenue: 0,
     totalTransactions: 0,
-    todayRevenue: 0,
-    todayTransactions: 0,
-    todayRegistrations: 0,
-  });
-  const [recentUsers, setRecentUsers] = useState([]);
-  const [recentTransactions, setRecentTransactions] = useState([]);
-  const [systemHealth, setSystemHealth] = useState({
-    database: "operational",
-    paystack: "operational",
-    notifications: "operational",
   });
 
   const [broadcastOpen, setBroadcastOpen] = useState(false);
@@ -725,73 +721,20 @@ const AdminDashboard = () => {
   const [maintenanceEnd, setMaintenanceEnd] = useState("");
   const [savingMaintenance, setSavingMaintenance] = useState(false);
 
-  const [momoPending, setMomoPending] = useState([]);
-  const [momoExpanded, setMomoExpanded] = useState(false);
-  const [momoProcessing, setMomoProcessing] = useState({});
-
   const fetchAdminAnalytics = async () => {
     try {
-      const response = await api.get("/get-analytics?date=today");
+      const response = await api.get("/get-analytics?date=all");
       const d = response.data || response;
-      const today = new Date().toISOString().split("T")[0];
-      const todayRevEntry = d.revenue?.daily?.find((r) =>
-        r.date?.startsWith?.(today)
-      );
-      const todayUserEntry = d.user_growth?.daily?.find((r) =>
-        r.date?.startsWith?.(today)
-      );
       setAnalytics({
         totalUsers: d.platform_stats?.total_users || 0,
-        totalRevenue: d.revenue?.summary?.total_revenue || 0,
+        totalRevenue: d.platform_stats?.total_revenue || 0,
         totalTransactions:
-          d.platform_stats?.total_successful_transactions ||
-          d.revenue?.summary?.total_transactions ||
-          0,
-        todayRevenue: todayRevEntry
-          ? parseFloat(todayRevEntry.wallet_funds || 0) +
-            parseFloat(todayRevEntry.data_sales || 0)
-          : 0,
-        todayTransactions: todayRevEntry
-          ? parseInt(todayRevEntry.transaction_count || 0)
-          : 0,
-        todayRegistrations: todayUserEntry
-          ? parseInt(todayUserEntry.new_users || 0)
-          : 0,
+          d.platform_stats?.total_successful_transactions || 0,
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
-    }
-  };
-
-  const fetchRecentActivity = async () => {
-    try {
-      const [usersRes, transactionsRes] = await Promise.all([
-        api.get("/admin-users-manage?action=list&limit=5"),
-        api.get("/transactions-history?limit=10"),
-      ]);
-      const ud = usersRes.data || usersRes;
-      const td = transactionsRes.data || transactionsRes;
-      setRecentUsers(ud.users || []);
-      setRecentTransactions(td.transactions || []);
-    } catch (error) {
-      console.error("Error fetching recent activity:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkSystemHealth = async () => {
-    try {
-      const response = await api.get("/health");
-      setSystemHealth(
-        response.status || {
-          database: "operational",
-          paystack: "operational",
-          notifications: "operational",
-        }
-      );
-    } catch (error) {
-      console.error("System health check failed:", error);
     }
   };
 
@@ -811,22 +754,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchMomoPending = async () => {
-    try {
-      const res = await api.get("/admin-momo-manage?status=pending");
-      const d = res.data || res;
-      setMomoPending(d.payments || []);
-    } catch (error) {
-      console.error("Error fetching MoMo payments:", error);
-    }
-  };
-
   useEffect(() => {
     fetchAdminAnalytics();
-    fetchRecentActivity();
-    checkSystemHealth();
     fetchSiteSettings();
-    fetchMomoPending();
   }, []);
 
   const saveMaintenanceSettings = async (overrides = {}) => {
@@ -868,25 +798,6 @@ const AdminDashboard = () => {
     saveMaintenanceSettings({ maintenance_mode: true });
   };
 
-  const handleMomoAction = async (paymentId, action) => {
-    setMomoProcessing((prev) => ({ ...prev, [paymentId]: action }));
-    try {
-      await api.put("/admin-momo-manage", { payment_id: paymentId, action });
-      toast.success(
-        `Payment ${action === "approve" ? "approved" : "rejected"}`
-      );
-      setMomoPending((prev) => prev.filter((p) => p.id !== paymentId));
-    } catch (err) {
-      toast.error(err?.message || `Failed to ${action} payment`);
-    } finally {
-      setMomoProcessing((prev) => {
-        const next = { ...prev };
-        delete next[paymentId];
-        return next;
-      });
-    }
-  };
-
   if (loading) return <AdminDashboardSkeleton />;
 
   return (
@@ -900,7 +811,6 @@ const AdminDashboard = () => {
         onClose={() => setFundWalletOpen(false)}
         onSuccess={() => {
           fetchAdminAnalytics();
-          fetchRecentActivity();
         }}
       />
 
@@ -921,16 +831,6 @@ const AdminDashboard = () => {
           <Bell className="w-4 h-4" /> Broadcast
         </button>
       </div>
-
-      {/* System Health Alert */}
-      {(systemHealth.database !== "operational" ||
-        systemHealth.paystack !== "operational" ||
-        systemHealth.notifications !== "operational") && (
-        <Alert variant="warning" title="System Alert">
-          Some services are experiencing issues. Please check the system status
-          below.
-        </Alert>
-      )}
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -958,226 +858,6 @@ const AdminDashboard = () => {
           icon={ShoppingBag}
           variant="default"
         />
-      </div>
-
-      {/* Today's Performance */}
-      <Card variant="gradient" padding="lg">
-        <CardHeader>
-          <CardTitle>Today's Performance</CardTitle>
-          <CardDescription>
-            Real-time metrics for {new Date().toLocaleDateString()}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              {
-                label: "Revenue",
-                value: formatCurrency(analytics.todayRevenue, true),
-                icon: TrendingUp,
-                color: "text-green-500",
-                sub: "Since midnight",
-              },
-              {
-                label: "Transactions",
-                value: formatCompactNumber(analytics.todayTransactions),
-                icon: Activity,
-                color: "text-blue-500",
-                sub: "Completed today",
-              },
-              {
-                label: "New Users",
-                value: formatCompactNumber(analytics.todayRegistrations),
-                icon: Users,
-                color: "text-primary-600",
-                sub: "Registered today",
-              },
-            ].map(({ label, value, icon: Icon, color, sub }) => (
-              <div key={label} className="bg-primary-600/5 rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <p className="text-dark-400 text-sm">{label}</p>
-                  <Icon className={`w-5 h-5 ${color}`} />
-                </div>
-                <h3 className="text-3xl font-bold text-white mb-2">{value}</h3>
-                <p className="text-xs text-dark-500">{sub}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Status + Pending Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Activity className="w-6 h-6 text-primary-600" />
-              <div>
-                <CardTitle>System Status</CardTitle>
-                <CardDescription>Service health monitoring</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { key: "database", label: "Database" },
-                { key: "paystack", label: "Payment Gateway" },
-                { key: "notifications", label: "Notifications" },
-              ].map(({ key, label }) => (
-                <div
-                  key={key}
-                  className="flex items-center justify-between p-4 bg-primary-600/5 rounded-xl"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        systemHealth[key] === "operational"
-                          ? "bg-green-500"
-                          : "bg-red-500"
-                      } animate-pulse`}
-                    />
-                    <span className="text-white font-medium">{label}</span>
-                  </div>
-                  <Badge
-                    variant={
-                      systemHealth[key] === "operational" ? "success" : "danger"
-                    }
-                    size="sm"
-                  >
-                    {systemHealth[key]}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-6 h-6 text-yellow-600" />
-              <div>
-                <CardTitle>Pending Actions</CardTitle>
-                <CardDescription>Items requiring attention</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="rounded-xl overflow-hidden">
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between p-4 bg-primary-600/5 hover:bg-primary-600/10 transition-colors cursor-pointer"
-                  onClick={() => setMomoExpanded(!momoExpanded)}
-                >
-                  <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-yellow-500" />
-                    <div className="text-left">
-                      <p className="text-white font-medium">
-                        MoMo Payments Pending
-                      </p>
-                      <p className="text-sm text-dark-400">
-                        Mobile money approvals
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="warning" size="lg">
-                    {momoPending.length}
-                  </Badge>
-                </button>
-
-                {momoExpanded && momoPending.length > 0 && (
-                  <div className="border-t border-dark-800 bg-primary-600/5 divide-y divide-dark-800 max-h-64 overflow-y-auto">
-                    {momoPending.map((payment) => (
-                      <div
-                        key={payment.id}
-                        className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-white text-sm font-medium truncate">
-                            {payment.user_name ||
-                              payment.full_name ||
-                              "Unknown User"}
-                          </p>
-                          <p className="text-dark-400 text-xs">
-                            {payment.phone || payment.phone_number} &middot;{" "}
-                            {payment.created_at
-                              ? new Date(
-                                  payment.created_at
-                                ).toLocaleDateString()
-                              : ""}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0">
-                          <span className="text-white font-bold text-sm whitespace-nowrap">
-                            {formatCurrency(payment.amount)}
-                          </span>
-                          <button
-                            disabled={!!momoProcessing[payment.id]}
-                            onClick={() =>
-                              handleMomoAction(payment.id, "approve")
-                            }
-                            className="p-1.5 rounded-lg bg-green-600/10 text-green-500 hover:bg-green-600/20 transition-colors disabled:opacity-50"
-                          >
-                            {momoProcessing[payment.id] === "approve" ? (
-                              <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <CheckCircle className="w-4 h-4" />
-                            )}
-                          </button>
-                          <button
-                            disabled={!!momoProcessing[payment.id]}
-                            onClick={() =>
-                              handleMomoAction(payment.id, "reject")
-                            }
-                            className="p-1.5 rounded-lg bg-red-600/10 text-red-500 hover:bg-red-600/20 transition-colors disabled:opacity-50"
-                          >
-                            {momoProcessing[payment.id] === "reject" ? (
-                              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <XCircle className="w-4 h-4" />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {momoExpanded && momoPending.length === 0 && (
-                  <div className="border-t border-dark-800 bg-primary-600/5 p-4">
-                    <p className="text-dark-400 text-sm text-center">
-                      No pending MoMo payments
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-primary-600/5 rounded-xl hover:bg-primary-600/10 transition-colors cursor-pointer">
-                <div>
-                  <p className="text-white font-medium">Reported Issues</p>
-                  <p className="text-sm text-dark-400">
-                    Customer support tickets
-                  </p>
-                </div>
-                <Badge variant="info" size="lg">
-                  0
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-primary-600/5 rounded-xl hover:bg-primary-600/10 transition-colors cursor-pointer">
-                <div>
-                  <p className="text-white font-medium">System Updates</p>
-                  <p className="text-sm text-dark-400">Available updates</p>
-                </div>
-                <Badge variant="success" size="lg">
-                  0
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Maintenance Mode */}
@@ -1325,99 +1005,6 @@ const AdminDashboard = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <CardTitle>Recent Registrations</CardTitle>
-            <CardDescription>Latest 5 registered users</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentUsers.length > 0 ? (
-                recentUsers.map((u) => (
-                  <div
-                    key={u.id}
-                    className="flex items-center justify-between p-3 bg-primary-600/5 rounded-xl hover:bg-primary-600/10 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-white font-medium truncate">
-                        {u.full_name}
-                      </p>
-                      <p className="text-xs text-dark-400 truncate">
-                        {u.email}
-                      </p>
-                    </div>
-                    <Badge variant="default" size="sm">
-                      Customer
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-dark-400 py-8">
-                  No recent registrations
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Latest system transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentTransactions.length > 0 ? (
-                recentTransactions.slice(0, 5).map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-3 bg-primary-600/5 rounded-xl"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-white font-medium text-sm truncate">
-                        {transaction.type?.replace("_", " ")}
-                      </p>
-                      <p className="text-xs text-dark-400 truncate">
-                        {transaction.reference}
-                      </p>
-                    </div>
-                    <div className="text-right flex-shrink-0 ml-3">
-                      <p className="text-white font-bold">
-                        {formatCurrency(transaction.amount)}
-                      </p>
-                      <Badge
-                        variant={
-                          transaction.status === "completed" ||
-                          transaction.status === "success"
-                            ? "success"
-                            : transaction.status === "pending"
-                            ? "warning"
-                            : "danger"
-                        }
-                        size="sm"
-                      >
-                        {transaction.status === "success" ||
-                        transaction.status === "completed"
-                          ? "Delivered"
-                          : transaction.status === "processing"
-                          ? "Processing"
-                          : transaction.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-dark-400 py-8">
-                  No recent transactions
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Share Link */}
       <ShareBuyLink />

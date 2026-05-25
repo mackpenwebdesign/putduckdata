@@ -162,7 +162,9 @@ export const handler = async (event) => {
         (SELECT COUNT(*) FROM users) as total_users,
         (SELECT COALESCE(SUM(wallet_balance), 0) FROM users) as total_wallet_balance,
         (SELECT COUNT(*) FROM transactions WHERE type IN ('data_purchase', 'guest_data_purchase') AND status IN ('success', 'completed')) as total_successful_transactions,
-        (SELECT COUNT(*) FROM transactions WHERE type IN ('data_purchase', 'guest_data_purchase') AND status IN ('success', 'completed', 'pending', 'processing')) as total_data_purchases`
+        (SELECT COUNT(*) FROM transactions WHERE type IN ('data_purchase', 'guest_data_purchase') AND status IN ('success', 'completed', 'pending', 'processing')) as total_data_purchases,
+        (SELECT COALESCE(SUM(t.amount), 0) FROM transactions t LEFT JOIN data_plans dp ON dp.id = t.data_plan_id WHERE t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed')) as total_revenue,
+        (SELECT COALESCE(SUM(COALESCE(dp.cost_price, 0)), 0) FROM transactions t LEFT JOIN data_plans dp ON dp.id = t.data_plan_id WHERE t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed')) as total_cost`
     );
 
     // ── 10. Visitor Stats — total visits in period ────────────────────────────
@@ -307,6 +309,14 @@ export const handler = async (event) => {
             parseInt(platformRows[0]?.total_successful_transactions) || 0,
           total_data_purchases:
             parseInt(platformRows[0]?.total_data_purchases) || 0,
+          total_revenue: parseFloat(platformRows[0]?.total_revenue) || 0,
+          total_cost: parseFloat(platformRows[0]?.total_cost) || 0,
+          total_profit:
+            Math.max(
+              0,
+              (parseFloat(platformRows[0]?.total_revenue) || 0) -
+                (parseFloat(platformRows[0]?.total_cost) || 0)
+            ),
         },
       },
       "Analytics retrieved successfully"

@@ -391,8 +391,7 @@ const AdminAnalytics = () => {
   };
 
   const platformStats = analytics.platform_stats || {};
-  const revenueSummary = analytics.revenue?.summary || {};
-  const totalRevenue = revenueSummary.total_revenue || 0;
+  const totalRevenue = platformStats.total_revenue || 0;
 
   if (loading) return <AnalyticsSkeleton />;
 
@@ -499,28 +498,6 @@ const AdminAnalytics = () => {
           )}
         </div>
 
-        {/* User Growth */}
-        <div className="bg-dark-900 border border-dark-800 rounded-2xl p-4 sm:p-6">
-          <SectionHead
-            icon={Users}
-            iconCls="text-emerald-400"
-            bgCls="bg-emerald-500/15 border-emerald-500/20"
-            title="User Growth"
-          />
-          {analytics.user_growth?.daily?.length > 0 ? (
-            <AnalyticsChart
-              type="line"
-              data={analytics.user_growth.daily}
-              categories={["new_users", "cumulative_users"]}
-              height={220}
-            />
-          ) : (
-            <EmptyState
-              icon={Users}
-              message="No user growth data for this period"
-            />
-          )}
-        </div>
       </div>
 
       {/* ── Top Customers ── */}
