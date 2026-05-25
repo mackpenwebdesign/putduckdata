@@ -62,8 +62,10 @@ export const handler = async (event) => {
         DATE(t.created_at) as date,
         SUM(CASE WHEN t.type = 'wallet_fund' AND t.status = 'success' THEN t.amount ELSE 0 END) as wallet_funds,
         SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as data_sales,
+        SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN COALESCE(dp.cost_price, 0) ELSE 0 END) as total_cost,
         COUNT(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN 1 END) as transaction_count
        FROM transactions t
+       LEFT JOIN data_plans dp ON dp.id = t.data_plan_id
        WHERE ${txnDateCondition}
        GROUP BY DATE(t.created_at)
        ORDER BY date ASC`
@@ -74,8 +76,10 @@ export const handler = async (event) => {
       `SELECT
         SUM(CASE WHEN t.type = 'wallet_fund' AND t.status = 'success' THEN t.amount ELSE 0 END) as total_wallet_funds,
         SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN t.amount ELSE 0 END) as total_data_sales,
+        SUM(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN COALESCE(dp.cost_price, 0) ELSE 0 END) as total_cost,
         COUNT(CASE WHEN t.type IN ('data_purchase', 'guest_data_purchase') AND t.status IN ('success', 'completed') THEN 1 END) as total_transactions
        FROM transactions t
+       LEFT JOIN data_plans dp ON dp.id = t.data_plan_id
        WHERE ${txnDateCondition}`
     );
 
@@ -224,19 +228,30 @@ export const handler = async (event) => {
 
         // ── Revenue ─────────────────────────────────────────────────────────
         revenue: {
-          daily: revenueRows.map((row) => ({
-            date: row.date,
-            wallet_funds: parseFloat(row.wallet_funds) || 0,
-            data_sales: parseFloat(row.data_sales) || 0,
-            transaction_count: parseInt(row.transaction_count) || 0,
-          })),
+          daily: revenueRows.map((row) => {
+            const sales = parseFloat(row.data_sales) || 0;
+            const cost = parseFloat(row.total_cost) || 0;
+            return {
+              date: row.date,
+              wallet_funds: parseFloat(row.wallet_funds) || 0,
+              data_sales: sales,
+              total_cost: cost,
+              profit: Math.max(0, sales - cost),
+              transaction_count: parseInt(row.transaction_count) || 0,
+            };
+          }),
           summary: {
             total_wallet_funds:
               parseFloat(summaryRows[0]?.total_wallet_funds) || 0,
             total_data_sales: parseFloat(summaryRows[0]?.total_data_sales) || 0,
-            total_revenue:
-              (parseFloat(summaryRows[0]?.total_wallet_funds) || 0) +
-              (parseFloat(summaryRows[0]?.total_data_sales) || 0),
+            total_cost: parseFloat(summaryRows[0]?.total_cost) || 0,
+            total_revenue: parseFloat(summaryRows[0]?.total_data_sales) || 0,
+            total_profit:
+              Math.max(
+                0,
+                (parseFloat(summaryRows[0]?.total_data_sales) || 0) -
+                  (parseFloat(summaryRows[0]?.total_cost) || 0)
+              ),
             total_transactions:
               parseInt(summaryRows[0]?.total_transactions) || 0,
           },

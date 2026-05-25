@@ -55,7 +55,7 @@ export const handler = async (event) => {
 
     return successResponse(200, {
       token: newToken,
-      expires_in: '7d'
+      expires_in: process.env.JWT_EXPIRY || '7d'
     }, 'Token refreshed successfully');
 
   } catch (error) {

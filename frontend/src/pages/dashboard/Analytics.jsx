@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BarChart3, Wifi, Users } from "lucide-react";
+import { BarChart3, Wifi, Users, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import AnalyticsChart from "../../components/AnalyticsChart";
 import DateRangePicker from "../../components/DateRangePicker";
 import Badge from "../../components/Badge";
@@ -84,26 +84,6 @@ const Analytics = () => {
           value={{ preset: dateFilter }}
           onChange={handleDateChange}
         />
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
-        <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5 flex items-center gap-4">
-          <div className="w-11 h-11 bg-primary-500/10 rounded-xl flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-primary-400" />
-          </div>
-          <div>
-            <p className="text-dark-400 text-xs uppercase tracking-wider mb-0.5">
-              Registered Users
-            </p>
-            <p className="text-3xl font-bold text-white">
-              {(
-                analyticsData?.platform_stats?.total_users || 0
-              ).toLocaleString()}
-            </p>
-            <p className="text-dark-500 text-xs mt-0.5">All time</p>
-          </div>
-        </div>
       </div>
 
       {/* Charts Row */}
@@ -262,42 +242,83 @@ const Analytics = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Profit Breakdown */}
+      {(() => {
+        const summary = analyticsData?.revenue?.summary || {};
+        const revenue = summary.total_revenue || 0;
+        const cost = summary.total_cost || 0;
+        const profit = summary.total_profit || 0;
+        const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : "0.0";
+        return (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-white">Profit Breakdown</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Revenue */}
+              <div className="bg-dark-900/80 border border-dark-800 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <DollarSign className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <p className="text-dark-400 text-xs uppercase tracking-wider">Total Revenue</p>
+                </div>
+                <p className="text-3xl font-bold text-white">{formatCurrency(revenue, true)}</p>
+                <p className="text-dark-500 text-xs mt-1">From {summary.total_transactions || 0} data orders · {dateFilter}</p>
+              </div>
+
+              {/* Cost — total sent/used from 1Papi account */}
+              <div className="bg-dark-900/80 border border-red-500/20 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 bg-red-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <TrendingDown className="w-5 h-5 text-red-400" />
+                  </div>
+                  <p className="text-dark-400 text-xs uppercase tracking-wider">Deposited to Provider</p>
+                </div>
+                <p className="text-3xl font-bold text-red-400">{formatCurrency(cost, true)}</p>
+                <p className="text-dark-500 text-xs mt-1">Deducted from 1Papi balance · {dateFilter}</p>
+              </div>
+
+              {/* Profit */}
+              <div className="bg-dark-900/80 border border-green-500/20 rounded-2xl p-5">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 bg-green-500/10 rounded-xl flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-5 h-5 text-green-400" />
+                  </div>
+                  <p className="text-dark-400 text-xs uppercase tracking-wider">Net Profit</p>
+                </div>
+                <p className="text-3xl font-bold text-green-400">{formatCurrency(profit, true)}</p>
+                <p className="text-dark-500 text-xs mt-1">{margin}% margin · {dateFilter}</p>
+              </div>
+            </div>
+
+            {/* Wallet Deposits row */}
+            <div className="bg-dark-900/50 border border-dark-800 rounded-xl px-5 py-3 flex items-center justify-between">
+              <p className="text-dark-400 text-sm">Total Wallet Top-ups (registered users deposited into your platform)</p>
+              <p className="text-white font-bold">{formatCurrency(summary.total_wallet_funds || 0, true)}</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Purchases Count + Users */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">Total Revenue</CardTitle>
+            <CardTitle className="text-2xl">Data Purchases</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-4xl font-bold text-white">
-              {formatCurrency(
-                analyticsData?.revenue?.summary?.total_data_sales || 0,
-                true
-              )}
-            </div>
+            <div className="text-4xl font-bold text-white">{purchases.length}</div>
             <p className="text-sm text-dark-400 mt-1">{dateFilter}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">Purchases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold text-white">
-              {purchases.length}
-            </div>
-            <p className="text-sm text-dark-400 mt-1">{dateFilter}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">Active Users</CardTitle>
+            <CardTitle className="text-2xl">Registered Users</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-4xl font-bold text-white">
               {analyticsData?.platform_stats?.total_users || 0}
             </div>
-            <p className="text-sm text-dark-400 mt-1">Total</p>
+            <p className="text-sm text-dark-400 mt-1">All time</p>
           </CardContent>
         </Card>
       </div>

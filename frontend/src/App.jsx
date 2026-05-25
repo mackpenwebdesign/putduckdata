@@ -184,7 +184,7 @@ const AppRoutes = ({ maintenance, adminPath }) => {
 function App() {
   const [loading, setLoading] = useState(true);
   const [maintenance, setMaintenance] = useState(null);
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, setToken } = useAuthStore();
 
   const isPaymentVerifyPage =
     window.location.pathname.includes("/payment/verify");
@@ -193,6 +193,23 @@ function App() {
   useEffect(() => {
     useThemeStore.getState().initTheme();
   }, []);
+
+  // Silent token auto-refresh: if token expires within 7 days, renew it silently
+  useEffect(() => {
+    if (!token) return;
+    try {
+      const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(b64));
+      const expiresIn = payload.exp * 1000 - Date.now();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      if (expiresIn > 0 && expiresIn < sevenDays) {
+        api.post("/token-refresh").then((res) => {
+          const newToken = res?.data?.token || res?.token;
+          if (newToken) setToken(newToken);
+        }).catch(() => {});
+      }
+    } catch {}
+  }, [token]);
 
   const checkMaintenance = async () => {
     try {
