@@ -16,7 +16,7 @@ import {
   notifyAdmins,
   NotificationType,
 } from "../utils/notifications.js";
-import { buyData } from "../utils/onepapi.js";
+import { buyData } from "../utils/fivestardata.js";
 import {
   isBot,
   hasSuspiciousPayload,
@@ -314,11 +314,10 @@ export const handler = async (event) => {
         );
       }
 
-      // ─── 1Papi provider ──────────────────────────────────────────────────
+      // ─── 5stardata provider ───────────────────────────────────────────────
       if (plan.provider_plan_id) {
         try {
-          const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
-          const providerResult = await buyData(phone_number, plan.provider_plan_id, onepapiWebhookUrl);
+          const providerResult = await buyData(phone_number, plan.provider_plan_id);
           providerRef = providerResult.reference || null;
 
           if (providerResult.success && providerResult.status !== "failed") {
@@ -339,7 +338,7 @@ export const handler = async (event) => {
               [
                 finalStatus,
                 JSON.stringify({
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_reference: providerRef,
                   provider_status: providerResult.status,
                   provider_success: true,
@@ -376,9 +375,9 @@ export const handler = async (event) => {
                 transactionId,
               ]
             );
-          } else if (apiError.code === "ONEPAPI_RATE_LIMIT") {
+          } else if (apiError.code === "FIVESTARDATA_RATE_LIMIT") {
             finalStatus = "processing";
-            console.warn("1Papi rate limit hit for tx:", reference);
+            console.warn("5stardata rate limit hit for tx:", reference);
             await sql(
               `UPDATE transactions SET
                  status = 'processing',
@@ -387,7 +386,7 @@ export const handler = async (event) => {
                WHERE id = $2`,
               [
                 JSON.stringify({
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_error: "Rate limit exceeded",
                   needs_manual_check: true,
                   retry_after_seconds: apiError.retryAfter,
@@ -397,7 +396,7 @@ export const handler = async (event) => {
             );
           } else {
             finalStatus = "processing";
-            console.error("1Papi API error (will check later):", apiError.message);
+            console.error("5stardata API error (will check later):", apiError.message);
             await sql(
               `UPDATE transactions SET
                  status = 'processing',
@@ -406,7 +405,7 @@ export const handler = async (event) => {
                WHERE id = $2`,
               [
                 JSON.stringify({
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_error: apiError.message,
                   needs_manual_check: true,
                 }),

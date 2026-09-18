@@ -5,16 +5,16 @@ import {
   errorResponse,
   corsResponse,
 } from "../utils/response.js";
-import { fetchPlans, checkOrderStatus, fetchBalance } from "../utils/onepapi.js";
+import { fetchPlans, checkOrderStatus, fetchBalance, setWebhookUrl } from "../utils/fivestardata.js";
 import {
   createNotification,
   NotificationType,
 } from "../utils/notifications.js";
 
 /**
- * Admin — Provider Management (1Papi)
- * GET  /api/admin-provider?action=balance|plans|key-info|sync|sync-orders
- * POST /api/admin-provider  { action: "check-order", reference: "..." }
+ * Admin — Provider Management (5stardata)
+ * GET  /api/admin-provider?action=balance|plans|sync|sync-orders
+ * POST /api/admin-provider  { action: "check-order"|"set-webhook", reference?: "...", webhook_url?: "..." }
  */
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
@@ -48,10 +48,6 @@ export const handler = async (event) => {
           return successResponse(200, { plans, total: plans.length });
         }
 
-        case "key-info": {
-          return errorResponse(501, "Key info not supported by 1Papi");
-        }
-
         case "sync": {
           // Fetch plans from provider and update provider_plan_id + cost_price in our DB
           const plans = await fetchPlans();
@@ -68,8 +64,6 @@ export const handler = async (event) => {
               .toUpperCase()
               .replace(/\s/g, "");
 
-            // Match by provider_plan_id OR network+data_volume fallback.
-            // Always write provider_plan_id so future syncs work by ID.
             const result = await executeQuery(
               `UPDATE data_plans
                SET cost_price       = $1,
@@ -94,7 +88,7 @@ export const handler = async (event) => {
               skipped,
               total_provider_plans: plans.length,
             },
-            `Synced ${updated} plan prices from 1Papi`
+            `Synced ${updated} plan prices from 5stardata`
           );
         }
 
@@ -229,7 +223,7 @@ export const handler = async (event) => {
         default:
           return errorResponse(
             400,
-            "Invalid action. Use: balance, plans, key-info, sync, sync-orders"
+            "Invalid action. Use: balance, plans, sync, sync-orders"
           );
       }
     }
@@ -246,7 +240,15 @@ export const handler = async (event) => {
         return successResponse(200, { order: result });
       }
 
-      return errorResponse(400, "Invalid action. POST supports: check-order");
+      if (body.action === "set-webhook") {
+        const webhookUrl =
+          body.webhook_url ||
+          `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/5star-webhook`;
+        const result = await setWebhookUrl(webhookUrl);
+        return successResponse(200, { result, webhook_url: webhookUrl }, "Webhook URL updated on 5stardata");
+      }
+
+      return errorResponse(400, "Invalid action. POST supports: check-order, set-webhook");
     }
 
     return errorResponse(405, "Method not allowed");

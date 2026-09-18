@@ -10,7 +10,7 @@ import {
   createNotification,
   NotificationType,
 } from "../utils/notifications.js";
-import { buyData } from "../utils/onepapi.js";
+import { buyData } from "../utils/fivestardata.js";
 
 // Returns true ONLY when the provider error is specifically about account balance.
 // Must require exact phrases to avoid false positives on unrelated errors
@@ -261,10 +261,9 @@ const handleVerifyPending24h = async (auth, body = {}) => {
         let finalStatus = "pending";
         let providerError = null;
 
-        // ── 1Papi provider ────────────────────────────────────────────────
+        // ── 5stardata provider ────────────────────────────────────────────
         if (plan.provider_plan_id) {
-          const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
-          const providerResult = await buyData(phoneNumber, plan.provider_plan_id, onepapiWebhookUrl);
+          const providerResult = await buyData(phoneNumber, plan.provider_plan_id);
           providerRef = providerResult.reference || null;
 
           if (providerResult.success && providerResult.status !== "failed") {
@@ -285,7 +284,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
               [
                 finalStatus,
                 JSON.stringify({
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_reference: providerRef,
                   provider_status: providerResult.status,
                   delivery_attempted: true,
@@ -300,7 +299,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
             results.push({
               ref: tx.reference,
               status: "placed",
-              provider: "1papi",
+              provider: "5stardata",
               provider_ref: providerRef,
               final_status: finalStatus,
             });
@@ -351,7 +350,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
                      WHERE id = $2`,
                     [
                       JSON.stringify({
-                        provider: "1papi",
+                        provider: "5stardata",
                         provider_error: providerError,
                         auto_refunded: true,
                         refund_amount: parseFloat(tx.amount),
@@ -381,7 +380,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
                    WHERE id = $2`,
                   [
                     JSON.stringify({
-                      provider: "1papi",
+                      provider: "5stardata",
                       provider_error: providerError,
                       delivery_attempted: true,
                       admin_bulk_verified: true,
@@ -396,7 +395,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
               results.push({
                 ref: tx.reference,
                 status: "failed",
-                provider: "1papi",
+                provider: "5stardata",
                 error: providerError,
               });
             }
@@ -445,7 +444,7 @@ const handleVerifyPending24h = async (auth, body = {}) => {
         placed,
         failed,
         skipped,
-        provider: "1papi",
+        provider: "5stardata",
         results,
       },
       `Bulk verify complete: ${placed} placed, ${failed} failed, ${skipped} skipped`

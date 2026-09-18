@@ -4,7 +4,7 @@ import {
   corsResponse,
 } from "../utils/response.js";
 import { executeQuery } from "../utils/db.js";
-import { checkOrderStatus } from "../utils/onepapi.js";
+import { checkOrderStatus } from "../utils/fivestardata.js";
 import { checkRateLimit, getClientIp } from "../utils/security.js";
 
 /**
@@ -13,7 +13,7 @@ import { checkRateLimit, getClientIp } from "../utils/security.js";
  * Body: { reference }
  *
  * Public — no auth required.
- * Polls 1Papi for the latest delivery status and syncs DB.
+ * Polls 5stardata for the latest delivery status and syncs DB.
  * Rate-limited to prevent abuse.
  */
 export const handler = async (event) => {

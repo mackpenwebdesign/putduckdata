@@ -14,10 +14,10 @@ dotenv.config({ path: join(__dir, "../../.env") });
 
 // Dynamic imports so env is loaded before module constants are evaluated
 const { executeQuery } = await import("../utils/db.js");
-const { fetchPlans } = await import("../utils/onepapi.js");
+const { fetchPlans } = await import("../utils/fivestardata.js");
 
 async function syncV2() {
-  console.log("🔄 1Papi v2 sync (fuzzy match)...\n");
+  console.log("🔄 5stardata v2 sync (fuzzy match)...\n");
 
   const providerPlans = await fetchPlans();
   console.log(`✅ ${providerPlans.length} provider plans`);

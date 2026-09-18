@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { executeQuery, executeTransaction } from "../utils/db.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 import { sendNotification, NotificationType } from "../utils/notifications.js";
-import { buyData } from "../utils/onepapi.js";
+import { buyData } from "../utils/fivestardata.js";
 
 /**
  * Paystack Webhook Handler
@@ -200,7 +200,7 @@ export const handler = async (event) => {
         }
         console.log("Guest purchase payment confirmed:", reference);
 
-        // Attempt data delivery via 1Papi
+        // Attempt data delivery via 5stardata
         try {
           const phoneNumber = meta.phone_number;
           const dataPlanId = meta.data_plan_id;
@@ -226,7 +226,7 @@ export const handler = async (event) => {
           }
 
           if (phoneNumber && dataPlanId) {
-            // 1Papi delivery
+            // 5stardata delivery
             const planRows = await executeQuery(
               "SELECT provider_plan_id FROM data_plans WHERE id = $1 AND is_active = true",
               [dataPlanId]
@@ -234,8 +234,7 @@ export const handler = async (event) => {
             const providerPlanId = planRows[0]?.provider_plan_id;
 
             if (providerPlanId) {
-              const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
-              const result = await buyData(phoneNumber, providerPlanId, onepapiWebhookUrl);
+              const result = await buyData(phoneNumber, providerPlanId);
               if (result.success && result.status !== "failed") {
                 const deliveryStatus = result.status === "completed" ? "completed" : "processing";
                 await executeQuery(
@@ -243,7 +242,7 @@ export const handler = async (event) => {
                   [
                     deliveryStatus,
                     JSON.stringify({
-                      provider: "1papi",
+                      provider: "5stardata",
                       provider_reference: result.reference,
                       provider_status: result.status,
                       delivery_attempted: true,
@@ -251,16 +250,16 @@ export const handler = async (event) => {
                     reference,
                   ]
                 );
-                console.log(`1Papi guest data delivery ${deliveryStatus}:`, reference);
+                console.log(`5stardata guest data delivery ${deliveryStatus}:`, reference);
               } else {
-                // 1Papi rejected — payment IS confirmed, but delivery failed.
+                // Provider rejected — payment IS confirmed, but delivery failed.
                 // Queue for manual fulfil so admin can retry or refund.
                 await executeQuery(
                   `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
                   [
                     JSON.stringify({
                       delivery_failed: true,
-                      provider: "1papi",
+                      provider: "5stardata",
                       provider_error: result.message,
                       needs_manual_fulfil: true,
                       delivery_attempted: true,
@@ -268,7 +267,7 @@ export const handler = async (event) => {
                     reference,
                   ]
                 );
-                console.warn("1Papi guest delivery rejected (webhook):", reference, result.message);
+                console.warn("5stardata guest delivery rejected (webhook):", reference, result.message);
               }
             } else {
               // No provider_plan_id — plan not synced, queue for manual delivery

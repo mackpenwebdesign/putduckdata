@@ -11,7 +11,7 @@ import {
   verifyTransactionIntegrity,
   verifyGuestTransactionIntegrity,
 } from "../utils/transaction-integrity.js";
-import { buyData } from "../utils/onepapi.js";
+import { buyData } from "../utils/fivestardata.js";
 
 /**
  * Verify Paystack Payment
@@ -361,7 +361,7 @@ export const handler = async (event) => {
       }
 
       try {
-        // ── 1Papi delivery ────────────────────────────────────────────────
+        // ── 5stardata delivery ────────────────────────────────────────────
         // Some guest flows rely on metadata->provider_plan_id, but that can be missing.
         // Resolve provider_plan_id from data_plans when needed.
         let providerPlanId = meta.provider_plan_id;
@@ -415,8 +415,7 @@ export const handler = async (event) => {
             dataPlanId,
           });
 
-          const onepapiWebhookUrl = `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/1papi-webhook`;
-          const result = await buyData(phoneNumber, providerPlanId, onepapiWebhookUrl);
+          const result = await buyData(phoneNumber, providerPlanId);
 
           console.log("[Guest Delivery] buyData result", {
             reference,
@@ -432,7 +431,7 @@ export const handler = async (event) => {
               `UPDATE transactions SET status = 'success', metadata = metadata || $1::jsonb WHERE reference = $2`,
               [
                 JSON.stringify({
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_reference: result.reference,
                   provider_status: result.status,
                   delivery_attempted: true,
@@ -442,15 +441,15 @@ export const handler = async (event) => {
             );
             deliveryStatus =
               result.status === "completed" ? "completed" : "processing";
-            console.log(`1Papi guest delivery ${result.status}:`, reference);
+            console.log(`5stardata guest delivery ${result.status}:`, reference);
           } else {
-            // Payment confirmed — 1Papi rejected. Keep status='success', queue for manual fulfil.
+            // Payment confirmed — provider rejected. Keep status='success', queue for manual fulfil.
             await executeQuery(
               `UPDATE transactions SET metadata = metadata || $1::jsonb WHERE reference = $2`,
               [
                 JSON.stringify({
                   delivery_failed: true,
-                  provider: "1papi",
+                  provider: "5stardata",
                   provider_error: result.message,
                   delivery_attempted: true,
                   needs_manual_fulfil: true,
@@ -461,12 +460,12 @@ export const handler = async (event) => {
             await notifyAdmins(
               NotificationType.ADMIN_ALERT,
               "Guest Order — Provider Rejected, Manual Fulfil Needed",
-              `Reference: ${reference} | Provider: 1Papi | Error: "${result.message}"`
+              `Reference: ${reference} | Provider: 5stardata | Error: "${result.message}"`
             );
             deliveryStatus = "failed";
             deliveryError = result.message;
             console.warn(
-              "1Papi guest delivery rejected (payment confirmed):",
+              "5stardata guest delivery rejected (payment confirmed):",
               reference,
               result.message
             );

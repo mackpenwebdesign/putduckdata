@@ -11,7 +11,7 @@ import {
   NotificationType,
 } from "../utils/notifications.js";
 import { generateReference } from "../utils/security.js";
-import { buyData } from "../utils/onepapi.js";
+import { buyData } from "../utils/fivestardata.js";
 
 const parseMeta = (m) => {
   if (!m) return {};
@@ -218,21 +218,21 @@ export const handler = async (event) => {
 
           try {
             if (meta.provider_plan_id && phone) {
-              // 1Papi delivery
+              // 5stardata delivery
               deliveryResult = await buyData(phone, meta.provider_plan_id);
               if (deliveryResult.success && deliveryResult.status !== "failed") {
                 txStatus = deliveryResult.status === "completed" ? "completed" : "processing";
-                txMeta.provider = "1papi";
+                txMeta.provider = "5stardata";
                 txMeta.provider_reference = deliveryResult.reference;
                 txMeta.provider_status = deliveryResult.status;
                 txMeta.delivery_attempted = true;
-                console.log("AFA 1Papi delivery status:", txStatus);
+                console.log("AFA 5stardata delivery status:", txStatus);
               } else {
                 txMeta.needs_manual_fulfil = true;
-                txMeta.provider = "1papi";
+                txMeta.provider = "5stardata";
                 txMeta.provider_error = deliveryResult.message;
                 txMeta.delivery_attempted = true;
-                console.warn("AFA 1Papi delivery failed, falling back to manual:", deliveryResult?.message);
+                console.warn("AFA 5stardata delivery failed, falling back to manual:", deliveryResult?.message);
               }
             } else {
               txMeta.needs_manual_fulfil = true;

@@ -6,12 +6,12 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dir, '../../.env') });
 dotenv.config({ path: join(__dir, '../.env') });
 
-const { fetchPlans, buyData, checkOrderStatus } = await import('../utils/onepapi.js');
+const { fetchPlans, buyData, checkOrderStatus } = await import('../utils/fivestardata.js');
 
 const phone = process.argv[2] || '0241234567';
 const planId = process.argv[3];
 
-console.log('📋 Fetching 1Papi plans...\n');
+console.log('📋 Fetching 5stardata plans...\n');
 const plans = await fetchPlans();
 console.log(`Found ${plans.length} plans:\n`);
 plans.slice(0, 5).forEach(p => {

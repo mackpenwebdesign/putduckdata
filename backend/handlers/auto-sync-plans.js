@@ -1,5 +1,5 @@
 import { executeQuery } from "../utils/db.js";
-import { fetchPlans } from "../utils/onepapi.js";
+import { fetchPlans } from "../utils/fivestardata.js";
 import {
   successResponse,
   errorResponse,
@@ -86,6 +86,6 @@ export const syncPricesCron = async (userId = null) => {
     ]
   );
 
-  console.log(`1Papi sync: ${updated} updated, ${skipped} skipped, total ${plans.length}`);
+  console.log(`5stardata sync: ${updated} updated, ${skipped} skipped, total ${plans.length}`);
   return { updated, skipped, total: plans.length };
 };

@@ -15,14 +15,14 @@ dotenv.config({ path: join(__dir, "../.env") });
 dotenv.config({ path: join(__dir, "../../.env") });
 
 const { executeQuery } = await import("../utils/db.js");
-const { fetchPlans } = await import("../utils/onepapi.js");
+const { fetchPlans } = await import("../utils/fivestardata.js");
 
 const MARKUP = 1.20; // 20% above cost price for new plans
 
 const normalizeVol = (v) => (v || "").toUpperCase().replace(/\s/g, "");
 
 async function run() {
-  console.log("🔄 Fetching plans from 1Papi...\n");
+  console.log("🔄 Fetching plans from 5stardata...\n");
 
   const providerPlans = await fetchPlans();
   console.log(`📦 ${providerPlans.length} plans from provider\n`);

@@ -40,6 +40,7 @@ import { handler as guestTrack } from "../handlers/guest-order-track.js";
 import { handler as orderStatus } from "../handlers/order-status-check.js";
 import { handler as guestOrderStatusCheck } from "../handlers/guest-order-status-check.js";
 import { handler as onepapiWebhook } from "../handlers/1papi-webhook.js";
+import { handler as fivestarWebhook } from "../handlers/5star-webhook.js";
 
 import { handler as paymentInit } from "../handlers/payment-initialize.js";
 import { handler as paymentVerify } from "../handlers/payment-verify.js";
@@ -197,6 +198,7 @@ app.get("/api/guest-order-track", wrap(guestTrack));
 app.post("/api/order-status-check", wrap(orderStatus));
 app.post("/api/guest-order-status-check", wrap(guestOrderStatusCheck));
 app.post("/api/1papi-webhook", wrap(onepapiWebhook));
+app.post("/api/5star-webhook", wrap(fivestarWebhook));
 
 // Payments
 app.post("/api/payment-initialize", wrap(paymentInit));

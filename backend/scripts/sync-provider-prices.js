@@ -24,7 +24,7 @@ if (!loaded)
   console.warn("⚠️  No .env file found — relying on system env vars");
 
 const { executeQuery } = await import("../utils/db.js");
-const { fetchPlans } = await import("../utils/onepapi.js");
+const { fetchPlans } = await import("../utils/fivestardata.js");
 
 async function syncProviderPrices() {
   console.log("🚀 Starting price sync (match by network + volume)...\n");

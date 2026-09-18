@@ -6,7 +6,7 @@
  */
 
 import { executeQuery, executeTransaction } from "../utils/db.js";
-import { checkOrderStatus, buyData } from "../utils/onepapi.js";
+import { checkOrderStatus, buyData } from "../utils/fivestardata.js";
 import {
   createNotification,
   notifyAdmins,
@@ -53,16 +53,16 @@ async function syncGuestOrders() {
     const providerRef = meta.provider_reference;
     const phone = order.recipient_phone || meta.phone_number;
 
-    console.log(`\n📦 Processing ${order.reference} (1papi:${providerRef})`);
+    console.log(`\n📦 Processing ${order.reference} (5stardata:${providerRef})`);
 
     try {
       let newStatus = order.status;
       let providerData = null;
 
-      // Poll 1Papi status
+      // Poll 5stardata status
       if (providerRef) {
         providerData = await checkOrderStatus(providerRef);
-        console.log(`   1Papi: ${providerData?.status}`);
+        console.log(`   5stardata: ${providerData?.status}`);
 
         if (providerData?.status === "completed") {
           newStatus = "completed";
