@@ -52,7 +52,7 @@ const AdminProvider = () => {
 
   const handleToggleManual = async () => {
     setToggling(true);
-    const newProvider = isManual ? "1papi" : "manual";
+    const newProvider = isManual ? "5stardata" : "manual";
     try {
       await api.put("/admin-site-settings", {
         settings: [{ key: "data_provider", value: newProvider }],
@@ -61,7 +61,7 @@ const AdminProvider = () => {
       toast.success(
         newProvider === "manual"
           ? "Manual mode enabled — orders will queue for manual fulfilment"
-          : "Switched back to 1Papi — automatic delivery resumed"
+          : "Switched back to 5stardata — automatic delivery resumed"
       );
     } catch {
       toast.error("Failed to update provider setting");
@@ -148,12 +148,12 @@ const AdminProvider = () => {
         <div className="flex-1">
           <p className="text-dark-500 text-[11px] uppercase tracking-wide">Active Mode</p>
           <p className="text-white font-semibold text-sm">
-            {isManual ? "Manual Fulfilment" : "1Papi — Automatic"}
+            {isManual ? "Manual Fulfilment" : "5stardata — Automatic"}
           </p>
         </div>
       </div>
 
-      {/* 1Papi card */}
+      {/* 5stardata card */}
       <div className={`rounded-2xl border p-5 transition-all ${!isManual ? "bg-primary-600/10 border-primary-600/40 ring-1 ring-primary-600/20" : "bg-dark-900/80 border-dark-800"}`}>
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
@@ -161,7 +161,7 @@ const AdminProvider = () => {
               <ShieldCheck className={`w-6 h-6 ${!isManual ? "text-primary-400" : "text-dark-500"}`} />
             </div>
             <div>
-              <h3 className="text-white font-bold text-base">1Papi</h3>
+              <h3 className="text-white font-bold text-base">5stardata</h3>
               <span className="inline-block text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full mt-0.5 bg-green-500/10 text-green-400 border border-green-500/20">
                 Automatic
               </span>
@@ -183,7 +183,7 @@ const AdminProvider = () => {
                 <div className="w-7 h-7 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center">
                   <Wallet className="w-3.5 h-3.5 text-green-400" />
                 </div>
-                <span className="text-dark-400 text-xs font-medium uppercase tracking-wide">1Papi Balance</span>
+                <span className="text-dark-400 text-xs font-medium uppercase tracking-wide">5stardata Balance</span>
               </div>
               <button
                 onClick={handleCheckBalance}
@@ -208,7 +208,7 @@ const AdminProvider = () => {
                 </p>
                 <p className="text-dark-500 text-xs mt-0.5 flex items-center gap-1">
                   <Activity className="w-3 h-3" />
-                  Live balance from 1Papi
+                  Live balance from 5stardata
                 </p>
               </div>
             ) : (
@@ -233,12 +233,12 @@ const AdminProvider = () => {
               className="w-full justify-center"
             >
               <RefreshCw className={`w-4 h-4 mr-2 ${syncLoading ? "animate-spin" : ""}`} />
-              {syncLoading ? "Syncing prices…" : "Sync Prices from 1Papi"}
+              {syncLoading ? "Syncing prices…" : "Sync Prices from 5stardata"}
             </Button>
             <p className="text-dark-600 text-xs mt-2 text-center">
               {lastSynced
                 ? `Last synced: ${lastSynced.toLocaleTimeString()}`
-                : "Pulls live cost prices from 1Papi and updates your plan rates"}
+                : "Pulls live cost prices from 5stardata and updates your plan rates"}
             </p>
           </div>
         </div>
