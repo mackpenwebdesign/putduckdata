@@ -4,6 +4,42 @@ import { successResponse, errorResponse } from "../utils/response.js";
 import { sendNotification, NotificationType } from "../utils/notifications.js";
 import { buyData } from "../utils/fivestardata.js";
 
+// ─── Webhook Forwarding to PutduckLoan ─────────────────────────────
+const PUTDUCK_WEBHOOK_URL = 'https://putduckloan-api.godayde99.workers.dev/webhook';
+
+// Events to forward to PutduckLoan
+const EVENTS_TO_FORWARD = [
+  'charge.success',        // Loan repayments, wallet deposits
+  'transfer.success',      // Loan disbursements
+  'transfer.failed',       // Failed disbursements
+];
+
+async function forwardToPutduckLoan(event, data, signature) {
+  if (!EVENTS_TO_FORWARD.includes(event)) {
+    console.log('[Forward] Skipping event (not in forward list):', event);
+    return;
+  }
+
+  try {
+    const response = await fetch(PUTDUCK_WEBHOOK_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Paystack-Signature': signature, // Forward signature for verification
+      },
+      body: JSON.stringify({ event, data }),
+    });
+
+    if (response.ok) {
+      console.log('[Forward] ✅ Event forwarded to PutduckLoan:', event);
+    } else {
+      console.error('[Forward] ❌ Failed to forward to PutduckLoan:', response.status);
+    }
+  } catch (error) {
+    console.error('[Forward] ❌ Error forwarding to PutduckLoan:', error.message);
+  }
+}
+
 /**
  * Paystack Webhook Handler
  * POST /api/paystack-webhook
@@ -49,6 +85,12 @@ export const handler = async (event) => {
     const { event: eventType, data } = webhookEvent;
 
     console.log("Paystack webhook received:", eventType, data.reference);
+
+    // ─── FORWARD TO PUTDUCKLOAN (Non-blocking - don't wait for it) ─────
+    // Forward immediately after receiving the event
+    forwardToPutduckLoan(eventType, data, paystackSignature).catch(err => {
+      console.error('[Forward] Forwarding failed:', err);
+    });
 
     // Handle charge.success event
     if (eventType === "charge.success") {
@@ -340,6 +382,16 @@ export const handler = async (event) => {
       }
 
       console.log("Payment processed successfully:", reference);
+    }
+
+    // Handle transfer.success event
+    if (eventType === "transfer.success") {
+      console.log('[Webhook] Transfer successful:', data.reference);
+    }
+
+    // Handle transfer.failed event
+    if (eventType === "transfer.failed") {
+      console.log('[Webhook] Transfer failed:', data.reference);
     }
 
     return successResponse(200, null, "Webhook processed");
