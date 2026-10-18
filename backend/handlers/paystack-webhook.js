@@ -15,12 +15,17 @@ const EVENTS_TO_FORWARD = [
 ];
 
 async function forwardToPutduckLoan(event, data, signature) {
+  console.log('[Forward] Attempting to forward event:', event);
+  console.log('[Forward] Target URL:', PUTDUCK_WEBHOOK_URL);
+  console.log('[Forward] Events in forward list:', EVENTS_TO_FORWARD);
+
   if (!EVENTS_TO_FORWARD.includes(event)) {
     console.log('[Forward] Skipping event (not in forward list):', event);
     return;
   }
 
   try {
+    console.log('[Forward] Sending request to PutduckLoan...');
     const response = await fetch(PUTDUCK_WEBHOOK_URL, {
       method: 'POST',
       headers: {
@@ -30,13 +35,19 @@ async function forwardToPutduckLoan(event, data, signature) {
       body: JSON.stringify({ event, data }),
     });
 
+    console.log('[Forward] Response status:', response.status);
+    console.log('[Forward] Response ok:', response.ok);
+
     if (response.ok) {
       console.log('[Forward] ✅ Event forwarded to PutduckLoan:', event);
     } else {
       console.error('[Forward] ❌ Failed to forward to PutduckLoan:', response.status);
+      const responseText = await response.text();
+      console.error('[Forward] Response body:', responseText);
     }
   } catch (error) {
     console.error('[Forward] ❌ Error forwarding to PutduckLoan:', error.message);
+    console.error('[Forward] Error stack:', error.stack);
   }
 }
 
