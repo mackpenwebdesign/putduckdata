@@ -129,6 +129,7 @@ export const handler = async (event) => {
         currency: "GHS",
         reference,
         callback_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/payment/verify`,
+        webhook_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/paystack-webhook`,
         channels: ["mobile_money"],
         metadata: {
           user_id: user.id,
