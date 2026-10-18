@@ -128,8 +128,8 @@ export const handler = async (event) => {
         amount: Math.round(totalCharge * 100), // Paystack uses pesewas (1 GHS = 100 pesewas)
         currency: "GHS",
         reference,
-        callback_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/payment/verify`,
-        webhook_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/paystack-webhook`,
+        callback_url: `${process.env.FRONTEND_URL || "https://www.putduckdata.com"}/payment/verify`,
+        webhook_url: `${process.env.FRONTEND_URL || "https://www.putduckdata.com"}/api/paystack-webhook`,
         channels: ["mobile_money"],
         metadata: {
           user_id: user.id,

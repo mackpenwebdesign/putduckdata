@@ -208,9 +208,9 @@ export const handler = async (event) => {
           currency: "GHS",
           reference,
           callback_url: `${
-            process.env.FRONTEND_URL || "https://putduckdata.com"
+            process.env.FRONTEND_URL || "https://www.putduckdata.com"
           }/payment/verify?type=afa`,
-          webhook_url: `${process.env.FRONTEND_URL || "https://putduckdata.com"}/api/paystack-webhook`,
+          webhook_url: `${process.env.FRONTEND_URL || "https://www.putduckdata.com"}/api/paystack-webhook`,
           channels: ["mobile_money"],
           metadata: {
             transaction_type: "afa_registration",
