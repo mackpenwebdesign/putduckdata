@@ -5,7 +5,7 @@ import { sendNotification, NotificationType } from "../utils/notifications.js";
 import { buyData } from "../utils/fivestardata.js";
 
 // ─── Webhook Forwarding to PutduckLoan ─────────────────────────────
-const PUTDUCK_WEBHOOK_URL = 'https://putduckloan-api.godayde99.workers.dev/webhook';
+const PUTDUCK_WEBHOOK_URL = 'https://putduckloan-api.godayde99.workers.dev/webhook/paystack';
 
 // Events to forward to PutduckLoan
 const EVENTS_TO_FORWARD = [
